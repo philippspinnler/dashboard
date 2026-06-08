@@ -38,6 +38,12 @@ export default defineNuxtConfig({
     homeAssistantToken: '',
     homeAssistantPersonEntities: '', // comma-separated
 
+    // Doorbell (UniFi Protect G6 Entry via Home Assistant). The event entity is
+    // the doorbell-press signal (event.<name>_doorbell or a binary_sensor); the
+    // camera entity feeds the proxied live stream (e.g. camera.g6_entry_high).
+    doorbellEventEntity: '',
+    doorbellCameraEntity: '',
+
     netatmoIndoorTemperatureEntity: '',
     netatmoIndoorCo2Entity: '',
     netatmoOutdoorTemperatureEntity: '',
@@ -85,6 +91,12 @@ export default defineNuxtConfig({
       widgetsBottom: 'weather',
       enableGlassmorphism: 'false',
       useMockData: 'false',
+
+      // Doorbell overlay: show the live G6 Entry feed top-right on a ring.
+      doorbellEnabled: 'false',
+      doorbellPollMs: '1500', // how often to poll /api/doorbell for a fresh press
+      doorbellOverlaySeconds: '60', // how long the overlay stays up before auto-dismiss
+      doorbellAlwaysShow: 'false', // dev/tuning: pin the overlay open (no ring needed)
     },
   },
 })
