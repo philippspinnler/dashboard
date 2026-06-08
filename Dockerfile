@@ -3,7 +3,10 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+# Use `npm install` (not `npm ci`): @nuxt/cli pulls @bomb.sh/tab, whose optional
+# `commander` peer trips npm ci's strict resolver, and install also reliably
+# fetches the platform-specific native bindings (rolldown) for Alpine/musl.
+RUN npm install --no-audit --no-fund
 
 COPY . .
 RUN npm run build
