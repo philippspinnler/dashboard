@@ -1,17 +1,18 @@
-# dashboard-nuxt
+# Dashboard
 
-Single-container [Nuxt 3](https://nuxt.com) app that consolidates the former
-`dashboard-api` (FastAPI) and `dashboard-ui` (Vue 3 + Vite) into one codebase.
+A self-hosted, single-container [Nuxt 3](https://nuxt.com) dashboard for an
+always-on screen. It pulls together everyday information into one view: weather,
+calendars, public transport, household presence, Sonos, Netatmo climate, a solar
+inverter, and app metrics.
 
-- **UI** — SSR-rendered dashboard widgets in `components/widgets/`, laid out by `app.vue`.
-- **API** — the former FastAPI endpoints, now Nitro server routes in `server/api/`
-  (same cache TTLs via `defineCachedEventHandler`). Same-origin, so no CORS.
-- **Config** — everything lives in `runtimeConfig` (`nuxt.config.ts`) and is
-  overridable at container runtime via `NUXT_*` / `NUXT_PUBLIC_*` env vars.
-  See `.env.example`.
-
-> The original `dashboard-api/` and `dashboard-ui/` remain as a working fallback
-> and are unaffected by this app.
+- **Server-rendered UI** — widgets live in `components/widgets/` and are arranged
+  into screen regions by `app.vue`.
+- **Built-in API** — each data source is a Nitro server route in `server/api/`
+  (responses cached via `defineCachedEventHandler`). Served same-origin, so no CORS.
+- **Runtime configuration** — every setting (secrets, location, layout) lives in
+  `runtimeConfig` (`nuxt.config.ts`) and is overridable at container start via
+  `NUXT_*` / `NUXT_PUBLIC_*` env vars. Nothing is baked into the image. See
+  [`.env.example`](./.env.example).
 
 ## Develop
 
@@ -21,12 +22,12 @@ npm install
 # offline dev with built-in mock data (no external services needed)
 NUXT_PUBLIC_USE_MOCK_DATA=true npm run dev
 
-# against real services — copy .env.example to .env and fill in, then:
+# against real services — copy .env.example to .env, fill it in, then:
 npm run dev
 ```
 
-> The `dev` script sets `TMPDIR=/tmp` — macOS's default `$TMPDIR` is long enough
-> to push Nuxt's vite-node unix socket path past the 104-char limit, which breaks
+> The `dev` script sets `TMPDIR=/tmp`. macOS's default `$TMPDIR` is long enough to
+> push Nuxt's vite-node unix socket path past the 104-char limit, which breaks
 > `nuxt dev` ("Failed to restrict vite-node socket permissions"). `/tmp` is short.
 
 ## Build & run
@@ -38,25 +39,36 @@ node .output/server/index.mjs        # serves on :3000
 
 ## Docker
 
+A multi-stage `Dockerfile` produces a small runtime image. On every push to
+`main`, GitHub Actions builds and publishes it to Docker Hub as
+[`philippspinnler/dashboard`](https://hub.docker.com/r/philippspinnler/dashboard)
+(`latest` plus a commit-sha tag).
+
 ```bash
-docker build -t dashboard-nuxt .
-docker run -p 3000:3000 --env-file .env dashboard-nuxt
+# run the published image
+docker run -p 3000:3000 --env-file .env philippspinnler/dashboard
+
+# or build locally
+docker build -t dashboard .
+docker run -p 3000:3000 --env-file .env dashboard
 ```
 
-Because config is read at runtime, the same image works anywhere — set
-`NUXT_*` env vars (layout, secrets, mock toggle) without rebuilding.
+Because config is read at runtime, the same image runs anywhere — set the
+`NUXT_*` env vars (layout, secrets, location, mock toggle) without rebuilding.
 
 ## Layout
 
 Widgets are placed into five regions via comma-separated id lists:
 `NUXT_PUBLIC_WIDGETS_TOP_LEFT`, `_TOP_RIGHT`, `_LEFT`, `_RIGHT`, `_BOTTOM`.
-Available ids: `clock, calendar, sonos, presence, internet, netatmo,
-public-transportation, eo-guide, weather, cars, inverter`.
 
-## Notes / parity caveats
+Available ids: `clock`, `calendar`, `sonos`, `presence`, `internet`, `netatmo`,
+`public-transportation`, `eo-guide`, `weather`, `cars`, `inverter`.
 
-- `presence`, `cars`, `inverter` had no backend in the old API (mock-only). Their
-  routes serve mocks in mock mode and empty payloads otherwise — wire to real
-  sources (e.g. Home Assistant) when ready (`server/api/{presence,cars,inverter}.get.ts`).
-- `sonos` uses `@svrooij/sonos` SSDP discovery; verify on the LAN where it runs.
-- Drop a `public/tv.jpg` for the Sonos "TV playing" artwork (referenced as `/tv.jpg`).
+## Notes
+
+- `presence`, `cars` and `inverter` currently have no dedicated data source: their
+  routes serve mocks in mock mode and empty payloads otherwise. Wire them to real
+  sources (e.g. Home Assistant) in `server/api/{presence,cars,inverter}.get.ts`.
+- `sonos` relies on `@svrooij/sonos` SSDP discovery — verify it on the LAN where the
+  container runs.
+- Drop a `public/tv.jpg` to supply the Sonos "TV playing" artwork (referenced as `/tv.jpg`).
