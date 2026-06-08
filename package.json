@@ -1,0 +1,21 @@
+{
+  "name": "dashboard-nuxt",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "TMPDIR=/tmp nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@svrooij/sonos": "^2.5.0",
+    "dayjs": "^1.11.13",
+    "iconoir-vue": "^7.11.0",
+    "node-ical": "^0.26.1",
+    "nuxt": "^3.21.7",
+    "rrule": "^2.8.1",
+    "vue": "^3.5.22"
+  }
+}
