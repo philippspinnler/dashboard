@@ -56,6 +56,7 @@
         </div>
       </div>
     </div>
+    <DoorbellOverlay />
   </div>
 </template>
 

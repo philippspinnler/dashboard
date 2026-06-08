@@ -12,6 +12,7 @@ import eoGuide from './eoGuide.js'
 import cars from './cars.js'
 import album from './album.js'
 import inverter from './inverter.js'
+import doorbell from './doorbell.js'
 
 export const mocks = {
   weather,
@@ -25,4 +26,5 @@ export const mocks = {
   cars,
   album,
   inverter,
+  doorbell,
 }
