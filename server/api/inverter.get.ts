@@ -12,7 +12,10 @@ export default defineDashboardCachedHandler(
     const scale = parseFloat(config.inverterPowerScale) || 1
     // some inverters report battery power with the opposite sign — flip it back
     // so the canonical "+ = charging" convention holds for the widget.
-    const batterySign = config.inverterInvertBatteryPower === 'true' ? -1 : 1
+    // Nitro runs env values through destr(), so the flag arrives as a real
+    // boolean (true) when set via env, but stays a string ('false') as a config
+    // default — String() normalises both before comparing.
+    const batterySign = String(config.inverterInvertBatteryPower) === 'true' ? -1 : 1
 
     const e = {
       pv_power: config.inverterPvPowerEntity,
