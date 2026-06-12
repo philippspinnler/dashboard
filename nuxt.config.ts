@@ -66,6 +66,7 @@ export default defineNuxtConfig({
     inverterPvPowerEntity: '',
     inverterBatteryStateOfChargeEntity: '',
     inverterBatteryPowerEntity: '', // signed: + charging / - discharging
+    inverterInvertBatteryPower: 'false', // set 'true' if the entity reports - charging / + discharging
     inverterPowerScale: '1',
 
     // Album background: 'immich' (default) or 'icloud'

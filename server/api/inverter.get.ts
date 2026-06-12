@@ -10,6 +10,9 @@ export default defineDashboardCachedHandler(
 
     const config = useRuntimeConfig(event)
     const scale = parseFloat(config.inverterPowerScale) || 1
+    // some inverters report battery power with the opposite sign — flip it back
+    // so the canonical "+ = charging" convention holds for the widget.
+    const batterySign = config.inverterInvertBatteryPower === 'true' ? -1 : 1
 
     const e = {
       pv_power: config.inverterPvPowerEntity,
@@ -48,7 +51,7 @@ export default defineDashboardCachedHandler(
       grid_feedin: await power(e.grid_feedin),
       power_consumption: await power(e.power_consumption),
       battery_state_of_charge: await percent(e.battery_state_of_charge),
-      battery_power: await power(e.battery_power),
+      battery_power: (await power(e.battery_power)) * batterySign,
     }
   },
   { maxAge: 10 },
