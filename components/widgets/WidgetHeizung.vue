@@ -45,7 +45,7 @@ const state = computed(() => {
   return 'idle'
 })
 
-const stateLabel = computed(() => ({ heating: 'Heizt', cooling: 'Kühlt', idle: 'Bereit' })[state.value])
+const stateLabel = computed(() => ({ heating: 'Heizt', cooling: 'Kühlt', idle: 'Aus' })[state.value])
 const stateColor = computed(
   () => ({ heating: '#f97316', cooling: '#38bdf8', idle: 'rgba(255, 255, 255, 0.55)' })[state.value],
 )
