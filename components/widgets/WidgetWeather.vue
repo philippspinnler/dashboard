@@ -1,18 +1,18 @@
 <template>
   <div class="weather-container">
     <div class="current-container">
-      <h1>
+      <h1 class="current-icon">
         <component :is="current.iconComponent" />
       </h1>
-      <h2>{{ current.temperature }} °C</h2>
+      <div class="current-temp">{{ current.temperature }}<span class="metric-unit">&nbsp;°C</span></div>
     </div>
     <div class="daily-container" v-for="day in daily" :key="day.dateDay">
-      <h2>{{ day.dateDay }}</h2>
-      <h2>
+      <div class="day-name">{{ day.dateDay }}</div>
+      <div class="day-icon">
         <component :is="day.iconComponent" />
-      </h2>
-      <h3>{{ day.temperature.max }} °C</h3>
-      <h3>{{ day.temperature.min }} °C</h3>
+      </div>
+      <div class="day-max">{{ day.temperature.max }}°</div>
+      <div class="day-min">{{ day.temperature.min }}°</div>
     </div>
   </div>
 </template>
@@ -65,9 +65,56 @@ const daily = computed(() => {
 .weather-container {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.6rem;
 }
 
-.current-container h1 {
+/* Current conditions stay a hero: large icon + prominent temperature. */
+.current-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.current-icon {
   font-size: 4rem;
+  line-height: 1;
+}
+
+.current-temp {
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.2rem;
+}
+
+/* Daily forecast columns aligned to the shared type scale. */
+.daily-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.day-name {
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+}
+
+.day-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.day-max {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-min {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
 }
 </style>

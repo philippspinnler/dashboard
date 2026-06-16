@@ -2,22 +2,24 @@
   <div class="heizung">
     <h1 class="title">Heizung</h1>
 
-    <div class="state" :style="{ color: stateColor }">
-      <component :is="stateIcon" class="state-icon" />
-      <span class="state-label">{{ stateLabel }}</span>
-    </div>
+    <div class="metric-grid">
+      <span class="metric-label">Status</span>
+      <component :is="stateIcon" class="metric-icon" :style="{ color: stateColor }" />
+      <span class="metric-value" :style="{ color: stateColor }">{{ stateLabel }}</span>
 
-    <div class="metrics">
       <template v-if="roomActual !== null">
-        <span class="m-label">Raum</span>
-        <span class="m-value">
+        <span class="metric-label">Raum</span>
+        <span class="metric-icon"></span>
+        <span class="metric-value">
           {{ fmt(roomActual)
           }}<template v-if="roomTarget !== null"><span class="arrow"> → </span>{{ fmt(roomTarget) }}</template>
         </span>
       </template>
+
       <template v-if="outdoor !== null">
-        <span class="m-label">Außen</span>
-        <span class="m-value">{{ fmt(outdoor) }}</span>
+        <span class="metric-label">Außen</span>
+        <span class="metric-icon"></span>
+        <span class="metric-value">{{ fmt(outdoor) }}</span>
       </template>
     </div>
   </div>
@@ -53,56 +55,6 @@ const stateIcon = computed(() => ({ heating: FireFlame, cooling: SnowFlake, idle
 </script>
 
 <style scoped>
-/* inline-flex / inline-grid follow the column's text-align (right column → right),
-   matching how WidgetInverter aligns itself within the column. */
-.state {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
-}
-
-.state-icon {
-  width: 1.9rem;
-  height: 1.9rem;
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55));
-}
-
-.state-label {
-  font-size: 1.9rem;
-  font-weight: 400;
-  line-height: 1.05;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
-}
-
-.metrics {
-  display: inline-grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  column-gap: 0.7rem;
-  row-gap: 0.45rem;
-  margin-top: 0.55rem;
-}
-
-.m-label {
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.92rem;
-  letter-spacing: 0.04em;
-  text-align: right;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
-}
-
-.m-value {
-  font-size: 1.5rem;
-  font-weight: 400;
-  line-height: 1.05;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  white-space: nowrap;
-}
-
 .arrow {
   color: rgba(255, 255, 255, 0.5);
 }

@@ -1,12 +1,17 @@
 <template>
   <div>
     <h1 class="title">Internet</h1>
-    <div v-for="speedtest in speedtests" :key="speedtest.provider">
+    <div v-for="speedtest in speedtests" :key="speedtest.provider" class="speedtest">
       <p class="subtitle">{{ speedtest.provider }}</p>
-      <h2>
-        {{ speedtest.download }} <Download />
-        {{ speedtest.upload }} <Upload />
-      </h2>
+      <div class="metric-grid">
+        <span class="metric-label">Down</span>
+        <Download class="metric-icon" :style="{ color: '#34d399' }" />
+        <span class="metric-value">{{ speedtest.download }}<span class="metric-unit">&nbsp;Gbps</span></span>
+
+        <span class="metric-label">Up</span>
+        <Upload class="metric-icon" :style="{ color: '#60a5fa' }" />
+        <span class="metric-value">{{ speedtest.upload }}<span class="metric-unit">&nbsp;Gbps</span></span>
+      </div>
     </div>
   </div>
 </template>
@@ -18,3 +23,9 @@ import Upload from 'iconoir-vue/regular/Upload'
 const { data } = useWidgetData('/api/speedtest', 1800000)
 const speedtests = computed(() => data.value || [])
 </script>
+
+<style scoped>
+.speedtest + .speedtest {
+  margin-top: 0.6rem;
+}
+</style>

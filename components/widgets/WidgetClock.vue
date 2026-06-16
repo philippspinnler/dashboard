@@ -50,9 +50,11 @@ onBeforeUnmount(() => {
   margin-top: 0.6rem;
   font-size: 1.5rem;
   margin-left: 0.2rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .widget-clock .date-container {
   font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 </style>
