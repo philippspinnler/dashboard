@@ -57,13 +57,13 @@
       </div>
     </div>
     <DoorbellOverlay />
+    <SonosOverlay />
   </div>
 </template>
 
 <script setup>
 import WidgetClock from '~/components/widgets/WidgetClock.vue'
 import WidgetCalendar from '~/components/widgets/WidgetCalendar.vue'
-import WidgetSonos from '~/components/widgets/WidgetSonos.vue'
 import WidgetPresence from '~/components/widgets/WidgetPresence.vue'
 import WidgetInternet from '~/components/widgets/WidgetInternet.vue'
 import WidgetNetatmo from '~/components/widgets/WidgetNetatmo.vue'
@@ -81,7 +81,6 @@ const { topLeftWidgets, topRightWidgets, leftWidgets, rightWidgets, bottomWidget
 const widgetComponents = {
   clock: WidgetClock,
   calendar: WidgetCalendar,
-  sonos: WidgetSonos,
   presence: WidgetPresence,
   internet: WidgetInternet,
   netatmo: WidgetNetatmo,

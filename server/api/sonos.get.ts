@@ -1,11 +1,7 @@
-import { SonosManager } from '@svrooij/sonos'
-
-// Ports dashboard-api/app/plugins/sonos.py — current playing track across the
-// configured speakers. Cache TTL mirrors @cache(expire=10).
-//
-// Replaces Python's `soco` with @svrooij/sonos. Requires SSDP discovery on the
-// LAN where the dashboard runs; any failure degrades to "nothing playing".
-// Verify on-device — this path can't be exercised without a real Sonos.
+// Current playing track across the configured Sonos speakers, read from Home
+// Assistant `media_player.*` entities. Sonos now goes through HA like every
+// other integration — this replaces the previous @svrooij/sonos SSDP discovery
+// (a 5s LAN multicast scan on every request). Cache TTL mirrors @cache(expire=10).
 
 const NOT_PLAYING = { artist: null, song: null, playing: false, image: null, is_playing_tv: false }
 
@@ -14,81 +10,52 @@ export default defineDashboardCachedHandler(
     if (isMockEnabled(event)) return getMock('sonos')
 
     const config = useRuntimeConfig(event)
-    const deviceNames = parseList(config.sonosDevices)
-    if (deviceNames.length === 0) return NOT_PLAYING
+    const entities = parseList(config.sonosMediaPlayers)
+    if (entities.length === 0) return NOT_PLAYING
 
-    const manager = new SonosManager()
-    try {
-      await manager.InitializeWithDiscovery(5)
-
-      // Prefer a speaker that is actively PLAYING; fall back to the first found.
-      let device: any = null
-      let transportState = 'STOPPED'
-      for (const name of deviceNames) {
-        const dev = manager.Devices.find((d: any) => d.Name === name)
-        if (!dev) continue
-        if (!device) device = dev
-        const info = await dev.AVTransportService.GetTransportInfo({ InstanceID: 0 })
-        if (info.CurrentTransportState === 'PLAYING') {
-          device = dev
-          transportState = 'PLAYING'
-          break
-        }
-      }
-      if (!device) return NOT_PLAYING
-
-      const position = await device.AVTransportService.GetPositionInfo({ InstanceID: 0 })
-      const media = await device.AVTransportService.GetMediaInfo({ InstanceID: 0 })
-      const track: any = position.TrackMetaData && position.TrackMetaData !== 'NOT_IMPLEMENTED'
-        ? position.TrackMetaData
-        : {}
-      const currentUri: string = position.TrackURI || media.CurrentURI || ''
-
-      const playing = transportState === 'PLAYING'
-      let artist: string | null
-      let song: string | null
-      let image: string | null = null
-      let isPlayingTv = false
-
-      const isTv = currentUri.startsWith('x-sonos-htastream:') || currentUri.startsWith('x-rincon-stream:')
-      const isRadio =
-        currentUri.startsWith('x-sonosapi-stream:') || currentUri.startsWith('x-rincon-mp3radio:')
-
-      if (isRadio) {
-        const stationMeta: any = media.CurrentURIMetaData && media.CurrentURIMetaData !== 'NOT_IMPLEMENTED'
-          ? media.CurrentURIMetaData
-          : {}
-        artist = stationMeta.Title || track.StreamContent || null
-        song = track.Title || null
-        const sid = (currentUri.match(/s\d{5}/) || [])[0]
-        image = sid ? `https://cdn-profiles.tunein.com/${sid}/images/logod.jpg` : null
-      } else if (isTv) {
-        isPlayingTv = true
-        artist = 'Fernseher'
-        song = 'HDMI eARC'
-        image = '/tv.jpg'
-      } else {
-        artist = track.Artist || null
-        song = track.Title || null
-        const albumArt: string | undefined = track.AlbumArtUri
-        if (albumArt) {
-          const absolute = albumArt.startsWith('http')
-            ? albumArt
-            : `http://${device.Host}:${device.Port || 1400}${albumArt}`
-          image = `/api/sonos/image-proxy?url=${encodeURIComponent(absolute)}`
-        }
-      }
-
-      return { artist, song, playing, image, is_playing_tv: isPlayingTv }
-    } catch {
-      return NOT_PLAYING
-    } finally {
-      try {
-        await manager.CancelSubscription()
-      } catch {
-        // ignore
+    // Single card: show the first speaker that is actively playing.
+    let ent: any = null
+    for (const entityId of entities) {
+      const e: any = await haEntity(event, entityId)
+      if (e?.state === 'playing') {
+        ent = e
+        break
       }
     }
+    if (!ent) return NOT_PLAYING
+
+    const attrs = ent.attributes || {}
+
+    // TV / HDMI eARC: a Sonos soundbar (Arc/Beam) reports the TV input via the
+    // `source` attribute and/or a tv-ish media_content_type. Verify the exact
+    // values on-device — preserves the previous "Fernseher" treatment.
+    const source = String(attrs.source || '')
+    const contentType = String(attrs.media_content_type || '')
+    const isTv =
+      /\btv\b/i.test(source) ||
+      /hdmi|earc|line[- ]?in/i.test(source) ||
+      contentType === 'tvshow' ||
+      contentType === 'tv'
+
+    if (isTv) {
+      return { artist: 'Fernseher', song: 'HDMI eARC', playing: true, image: '/tv.jpg', is_playing_tv: true }
+    }
+
+    // Music & radio: HA fills media_artist/media_title (for radio the station is
+    // usually media_artist, the track media_title). Album art / station logo is
+    // exposed as entity_picture — an HA-relative URL behind our origin, so we
+    // route it through the image proxy (which attaches the HA bearer token).
+    const artist = attrs.media_artist || attrs.media_album_artist || null
+    const song = attrs.media_title || null
+
+    let image: string | null = null
+    const picture: string | undefined = attrs.entity_picture
+    if (picture) {
+      const absolute = picture.startsWith('http') ? picture : `${config.homeAssistantUrl}${picture}`
+      image = `/api/sonos/image-proxy?url=${encodeURIComponent(absolute)}`
+    }
+
+    return { artist, song, playing: true, image, is_playing_tv: false }
   },
   { maxAge: 10 },
 )

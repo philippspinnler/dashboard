@@ -170,6 +170,42 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
+/* --- Conditional corner overlays --------------------------------------------
+   Fixed cards pinned to a configurable viewport corner, shown only while active
+   (Sonos now-playing now; future low-battery, etc.). The doorbell overlay keeps
+   the top of the stack at z-index 1000; these sit just below at 900. Use with
+   the useOverlayPosition() composable and `<Transition name="overlay-pop">`. */
+.overlay-corner {
+  position: fixed;
+  z-index: 900;
+}
+.overlay-corner.is-top-left {
+  top: 1.2vh;
+  left: 1.2vh;
+}
+.overlay-corner.is-top-right {
+  top: 1.2vh;
+  right: 1.2vh;
+}
+.overlay-corner.is-bottom-left {
+  bottom: 1.2vh;
+  left: 1.2vh;
+}
+.overlay-corner.is-bottom-right {
+  bottom: 1.2vh;
+  right: 1.2vh;
+}
+
+.overlay-pop-enter-active,
+.overlay-pop-leave-active {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.overlay-pop-enter-from,
+.overlay-pop-leave-to {
+  opacity: 0;
+  transform: translateY(1.2vh) scale(0.96);
+}
+
 /* Text shadow for better readability */
 h1,
 h2,
@@ -181,21 +217,6 @@ p,
 span,
 div {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-
-/* Sonos widget layout adjustments */
-.container-content-right .sonos-container {
-  justify-content: flex-end;
-}
-
-.container-content-left .sonos-container {
-  justify-content: flex-end;
-  flex-direction: row-reverse;
-}
-
-.container-content-left .sonos-container .artwork {
-  margin-left: 0;
-  margin-right: 1.1rem;
 }
 
 /* Presence widget layout adjustments */
