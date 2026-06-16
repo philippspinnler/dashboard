@@ -61,14 +61,18 @@ Because config is read at runtime, the same image runs anywhere — set the
 Widgets are placed into five regions via comma-separated id lists:
 `NUXT_PUBLIC_WIDGETS_TOP_LEFT`, `_TOP_RIGHT`, `_LEFT`, `_RIGHT`, `_BOTTOM`.
 
-Available ids: `clock`, `calendar`, `sonos`, `presence`, `internet`, `netatmo`,
+Available ids: `clock`, `calendar`, `presence`, `internet`, `netatmo`,
 `public-transportation`, `eo-guide`, `weather`, `cars`, `inverter`.
+
+Sonos is not a grid widget — it shows as a now-playing card overlaid in a
+configurable corner only while a speaker is playing (`NUXT_PUBLIC_SONOS_OVERLAY_*`,
+`NUXT_SONOS_MEDIA_PLAYERS`).
 
 ## Notes
 
 - `presence`, `cars` and `inverter` currently have no dedicated data source: their
   routes serve mocks in mock mode and empty payloads otherwise. Wire them to real
   sources (e.g. Home Assistant) in `server/api/{presence,cars,inverter}.get.ts`.
-- `sonos` relies on `@svrooij/sonos` SSDP discovery — verify it on the LAN where the
-  container runs.
+- `sonos` reads Home Assistant `media_player.*` entities (`NUXT_SONOS_MEDIA_PLAYERS`)
+  and renders as a corner overlay; the first entity in the `playing` state is shown.
 - Drop a `public/tv.jpg` to supply the Sonos "TV playing" artwork (referenced as `/tv.jpg`).

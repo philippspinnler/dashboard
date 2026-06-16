@@ -48,7 +48,7 @@ export default defineNuxtConfig({
     netatmoIndoorCo2Entity: '',
     netatmoOutdoorTemperatureEntity: '',
 
-    sonosDevices: '', // comma-separated speaker names
+    sonosMediaPlayers: '', // comma-separated HA media_player entity ids
 
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]
@@ -109,6 +109,11 @@ export default defineNuxtConfig({
       doorbellPollMs: '1500', // how often to poll /api/doorbell for a fresh press
       doorbellOverlaySeconds: '60', // how long the overlay stays up before auto-dismiss
       doorbellAlwaysShow: 'false', // dev/tuning: pin the overlay open (no ring needed)
+
+      // Sonos overlay: a compact now-playing card shown in a corner only while a
+      // speaker is playing (no fixed grid space). Doorbell always renders on top.
+      sonosOverlayEnabled: 'true',
+      sonosOverlayPosition: 'bottom-right', // top-left | top-right | bottom-left | bottom-right
     },
   },
 })
