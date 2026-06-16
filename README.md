@@ -75,4 +75,4 @@ configurable corner only while a speaker is playing (`NUXT_PUBLIC_SONOS_OVERLAY_
   sources (e.g. Home Assistant) in `server/api/{presence,cars,inverter}.get.ts`.
 - `sonos` reads Home Assistant `media_player.*` entities (`NUXT_SONOS_MEDIA_PLAYERS`)
   and renders as a corner overlay; the first entity in the `playing` state is shown.
-- Drop a `public/tv.jpg` to supply the Sonos "TV playing" artwork (referenced as `/tv.jpg`).
+  The TV/HDMI eARC input shows a TV icon instead of album art.
