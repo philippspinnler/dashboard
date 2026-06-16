@@ -2,27 +2,27 @@
   <div class="inverter">
     <h1 class="title">Wechselrichter</h1>
 
-    <div class="metrics">
-      <span class="m-label">Solar</span>
-      <SunLight class="m-icon" :style="{ color: '#fbbf24' }" />
-      <span class="m-value">{{ pv.num }}<span class="m-unit">{{ pv.unit }}</span></span>
+    <div class="metric-grid">
+      <span class="metric-label">Solar</span>
+      <SunLight class="metric-icon" :style="{ color: '#fbbf24' }" />
+      <span class="metric-value">{{ pv.num }}<span class="metric-unit">{{ pv.unit }}</span></span>
 
-      <span class="m-label">Speicher</span>
-      <component :is="getBatteryIcon" class="m-icon" :style="{ color: batteryAccent }" />
-      <span class="m-value m-value--battery">
-        <span>{{ batterySOCFormatted }}<span class="m-unit">&nbsp;%</span></span>
-        <span v-if="batteryFlow" class="bat-flow" :style="{ color: batteryFlowColor }">
+      <span class="metric-label">Speicher</span>
+      <component :is="getBatteryIcon" class="metric-icon" :style="{ color: batteryAccent }" />
+      <span class="metric-value metric-value--battery">
+        <span>{{ batterySOCFormatted }}<span class="metric-unit">&nbsp;%</span></span>
+        <span v-if="batteryFlow" class="metric-sub" :style="{ color: batteryFlowColor }">
           {{ batteryFlowText }} {{ batteryFlowWatts }}
         </span>
       </span>
 
-      <span class="m-label">Haus</span>
-      <Home class="m-icon" :style="{ color: '#f97316' }" />
-      <span class="m-value">{{ home.num }}<span class="m-unit">{{ home.unit }}</span></span>
+      <span class="metric-label">Haus</span>
+      <Home class="metric-icon" :style="{ color: '#f97316' }" />
+      <span class="metric-value">{{ home.num }}<span class="metric-unit">{{ home.unit }}</span></span>
 
-      <span class="m-label">{{ gridLabel }}</span>
-      <component :is="getGridIcon" class="m-icon" :style="{ color: gridAccent }" />
-      <span class="m-value" :style="{ color: gridAccent }">{{ grid.num }}<span class="m-unit">{{ grid.unit }}</span></span>
+      <span class="metric-label">{{ gridLabel }}</span>
+      <component :is="getGridIcon" class="metric-icon" :style="{ color: gridAccent }" />
+      <span class="metric-value" :style="{ color: gridAccent }">{{ grid.num }}<span class="metric-unit">{{ grid.unit }}</span></span>
     </div>
   </div>
 </template>
@@ -113,61 +113,11 @@ const gridLabel = computed(() => {
 </script>
 
 <style scoped>
-/* inline-grid is inline-level, so it follows the column's text-align (right in
-   the right column, left in the left) — keeping the widget aligned like its
-   siblings and never overflowing/clipping. */
-.metrics {
-  display: inline-grid;
-  grid-template-columns: auto auto auto;
-  align-items: center;
-  column-gap: 0.7rem;
-  row-gap: 0.45rem;
-  margin-top: 0.4rem;
-}
-
-.m-label {
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.92rem;
-  letter-spacing: 0.04em;
-  text-align: right;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
-}
-
-.m-icon {
-  width: 1.45rem;
-  height: 1.45rem;
-  justify-self: center;
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55));
-}
-
-.m-value {
-  font-size: 1.7rem;
-  font-weight: 400;
-  line-height: 1.05;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.m-unit {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Battery cell stacks SOC above a small charge/discharge indicator */
-.m-value--battery {
+/* Battery cell stacks SOC above a small charge/discharge indicator (.metric-sub) */
+.metric-value--battery {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-end;
-  line-height: 1.05;
-}
-
-.bat-flow {
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  line-height: 1.1;
 }
 </style>

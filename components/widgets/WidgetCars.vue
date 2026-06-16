@@ -1,16 +1,31 @@
 <template>
   <div>
     <h1 class="title">{{ cars.length === 1 ? 'Auto' : 'Autos' }}</h1>
-    <div v-for="car in cars" :key="car.name">
-      <p class="subtitle">{{ car.name }}</p>
-      <h3>
-        <component :is="getBatteryIcon(car.charge_procentage)" /> {{ car.charge_procentage }} %
-        <EvPlugCharging /> {{ car.range }} km
-      </h3>
-      <h3 v-if="car.charging">
-        <Clock /> geladen {{ endOfChargeTime(car.end_of_charge) }}
-        <Flash /> {{ car.charging_power }} kw
-      </h3>
+    <div v-for="car in cars" :key="car.name" class="car">
+      <p class="subtitle" v-if="cars.length > 1">{{ car.name }}</p>
+      <div class="metric-grid">
+        <span class="metric-label">Akku</span>
+        <component
+          :is="getBatteryIcon(car.charge_procentage)"
+          class="metric-icon"
+          :style="{ color: batteryColor(car.charge_procentage) }"
+        />
+        <span class="metric-value">{{ car.charge_procentage }}<span class="metric-unit">&nbsp;%</span></span>
+
+        <span class="metric-label">Reichweite</span>
+        <EvPlugCharging class="metric-icon" :style="{ color: '#60a5fa' }" />
+        <span class="metric-value">{{ car.range }}<span class="metric-unit">&nbsp;km</span></span>
+
+        <template v-if="car.charging">
+          <span class="metric-label">Geladen</span>
+          <Clock class="metric-icon" :style="{ color: 'rgba(255, 255, 255, 0.7)' }" />
+          <span class="metric-value">{{ endOfChargeTime(car.end_of_charge) }}</span>
+
+          <span class="metric-label">Leistung</span>
+          <Flash class="metric-icon" :style="{ color: '#4ade80' }" />
+          <span class="metric-value">{{ car.charging_power }}<span class="metric-unit">&nbsp;kW</span></span>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -38,34 +53,18 @@ const getBatteryIcon = (percentage) => {
   if (percentage <= 80) return Battery75
   return BatteryFull
 }
+
+const batteryColor = (p) => {
+  if (p > 80) return '#22c55e'
+  if (p > 60) return '#84cc16'
+  if (p > 40) return '#eab308'
+  if (p > 20) return '#f59e0b'
+  return '#ef4444'
+}
 </script>
 
 <style scoped>
-.car-item {
-  margin-bottom: 1rem;
-}
-
-.car-item:last-child {
-  margin-bottom: 0;
-}
-
-.car-details p {
-  margin-bottom: 0.3rem;
-}
-
-.charging-status {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.charging-indicator {
-  color: #4ade80;
-  font-size: 0.9em;
-}
-
-.time-label {
-  color: rgba(255, 255, 255, 0.7);
+.car + .car {
+  margin-top: 0.6rem;
 }
 </style>

@@ -2,24 +2,29 @@
   <div>
     <h1 class="title">EO-Guide</h1>
 
-    <p class="subtitle">Abonnements</p>
-    <div class="abos">
-      <span class="abo-label">Jährlich</span>
-      <span class="abo-value">{{ yearly }}</span>
-      <span class="abo-label">Monatlich</span>
-      <span class="abo-value">{{ monthly }}</span>
-    </div>
+    <div class="metric-grid">
+      <span class="metric-label">Jährlich</span>
+      <span class="metric-icon"></span>
+      <span class="metric-value">{{ yearly }}</span>
 
-    <p class="subtitle">Bewertung</p>
-    <h3 class="rating">
-      <component
-        v-for="(star, index) in starsArray"
-        :key="index"
-        :is="star.component"
-        :class="star.class"
-      />
-      {{ overall_rating.toFixed(1) }}
-    </h3>
+      <span class="metric-label">Monatlich</span>
+      <span class="metric-icon"></span>
+      <span class="metric-value">{{ monthly }}</span>
+
+      <span class="metric-label">Bewertung</span>
+      <span class="metric-icon"></span>
+      <span class="metric-value rating-value">
+        <span class="stars">
+          <component
+            v-for="(star, index) in starsArray"
+            :key="index"
+            :is="star.component"
+            :class="star.class"
+          />
+        </span>
+        {{ overall_rating.toFixed(1) }}
+      </span>
+    </div>
   </div>
 </template>
 
@@ -55,41 +60,29 @@ const starsArray = computed(() => {
 </script>
 
 <style scoped>
-/* inline-grid follows the column's text-align, like the other right-column
-   widgets — label column + value column, neatly aligned. */
-.abos {
-  display: inline-grid;
-  grid-template-columns: auto auto;
-  align-items: baseline;
-  column-gap: 0.9rem;
-  row-gap: 0.1rem;
-  margin-bottom: 0.4rem;
-}
-
-.abo-label {
-  text-align: right;
-  color: rgba(255, 255, 255, 0.55);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
-}
-
-.abo-value {
-  text-align: right;
-  font-size: 1.7rem;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-}
-
-.rating {
+/* Rating sits in the value cell: small stars followed by the numeric score. */
+.rating-value {
   display: inline-flex;
   align-items: center;
-  gap: 0.18rem;
+  gap: 0.35rem;
 }
 
-.rating .filled {
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+}
+
+.rating-value svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.rating-value .filled {
   color: #fbbf24;
 }
 
-.rating .outline {
+.rating-value .outline {
   color: rgba(255, 255, 255, 0.4);
 }
 </style>
