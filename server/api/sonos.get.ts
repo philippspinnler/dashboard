@@ -38,7 +38,8 @@ export default defineDashboardCachedHandler(
       contentType === 'tv'
 
     if (isTv) {
-      return { artist: 'Fernseher', song: 'HDMI eARC', playing: true, image: '/tv.jpg', is_playing_tv: true }
+      // No artwork for the TV input — the overlay renders a TV icon from is_playing_tv.
+      return { artist: 'Fernseher', song: 'HDMI eARC', playing: true, image: null, is_playing_tv: true }
     }
 
     // Music & radio: HA fills media_artist/media_title (for radio the station is
