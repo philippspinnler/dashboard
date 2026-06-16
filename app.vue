@@ -72,6 +72,7 @@ import WidgetEoGuide from '~/components/widgets/WidgetEoGuide.vue'
 import WidgetWeather from '~/components/widgets/WidgetWeather.vue'
 import WidgetCars from '~/components/widgets/WidgetCars.vue'
 import WidgetInverter from '~/components/widgets/WidgetInverter.vue'
+import WidgetHeizung from '~/components/widgets/WidgetHeizung.vue'
 
 const { topLeftWidgets, topRightWidgets, leftWidgets, rightWidgets, bottomWidgets, enableGlassmorphism } =
   useWidgetConfig()
@@ -89,6 +90,7 @@ const widgetComponents = {
   weather: WidgetWeather,
   cars: WidgetCars,
   inverter: WidgetInverter,
+  heizung: WidgetHeizung,
 }
 
 const image = ref(null)

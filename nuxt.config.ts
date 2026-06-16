@@ -69,6 +69,17 @@ export default defineNuxtConfig({
     inverterInvertBatteryPower: 'false', // set 'true' if the entity reports - charging / + discharging
     inverterPowerScale: '1',
 
+    // Heizung (Stiebel Eltron ISG heat pump via Home Assistant). Entity ids are
+    // the defaults discovered on the install; override per-deployment via
+    // NUXT_HEIZUNG_* env vars. State = cooling if is_cooling, else heating if
+    // is_heating, else idle. Room target uses the comfort target (not the live
+    // target, which drops to ~5° in summer mode).
+    heizungIsHeatingEntity: 'binary_sensor.stiebel_eltron_isg_is_heating',
+    heizungIsCoolingEntity: 'binary_sensor.stiebel_eltron_isg_is_cooling',
+    heizungRoomActualEntity: 'sensor.stiebel_eltron_isg_actual_temperature_hk_1',
+    heizungRoomTargetEntity: 'number.stiebel_eltron_isg_comfort_temperature_target_hk1',
+    heizungOutdoorEntity: 'sensor.stiebel_eltron_isg_outdoor_temperature',
+
     // Album background: 'immich' (default) or 'icloud'
     albumProvider: 'immich',
     icloudAlbumId: '',
@@ -88,7 +99,7 @@ export default defineNuxtConfig({
       widgetsTopLeft: 'clock',
       widgetsTopRight: '',
       widgetsLeft: 'calendar',
-      widgetsRight: 'sonos,presence,internet,netatmo,public-transportation,eo-guide',
+      widgetsRight: 'heizung,presence,internet,netatmo,public-transportation,eo-guide',
       widgetsBottom: 'weather',
       enableGlassmorphism: 'false',
       useMockData: 'false',
