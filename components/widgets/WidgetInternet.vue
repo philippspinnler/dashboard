@@ -2,7 +2,7 @@
   <div>
     <h1 class="title">Internet</h1>
     <div v-for="speedtest in speedtests" :key="speedtest.provider" class="speedtest">
-      <p class="subtitle">{{ speedtest.provider }}</p>
+      <p v-if="speedtests.length > 1" class="subtitle">{{ speedtest.provider }}</p>
       <div class="metric-grid">
         <span class="metric-label">Down</span>
         <Download class="metric-icon" :style="{ color: '#34d399' }" />
