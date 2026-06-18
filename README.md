@@ -14,9 +14,9 @@ corner overlays.
 
 <br>
 
-![Dashboard screenshot](./docs/screenshot.png)
+<img src="./docs/screenshot.png" alt="Dashboard screenshot" width="380">
 
-<sub>Running in mock mode — all widgets and overlays shown with placeholder data.</sub>
+<sub>Portrait orientation, running in mock mode — all widgets and overlays shown with placeholder data.</sub>
 
 </div>
 
