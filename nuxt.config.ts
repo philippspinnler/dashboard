@@ -50,6 +50,8 @@ export default defineNuxtConfig({
 
     sonosMediaPlayers: '', // comma-separated HA media_player entity ids
 
+    batteryThreshold: '25', // low-battery overlay: include device_class battery entities at/below this %
+
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]
     speedtestsJson: '[]', // JSON: [{ host, port, provider }]
@@ -114,6 +116,11 @@ export default defineNuxtConfig({
       // speaker is playing (no fixed grid space). Doorbell always renders on top.
       sonosOverlayEnabled: 'true',
       sonosOverlayPosition: 'bottom-right', // top-left | top-right | bottom-left | bottom-right
+
+      // Low-battery overlay: lists HA `device_class: battery` entities at/below
+      // batteryThreshold, shown in a corner while any battery is low.
+      batteryOverlayEnabled: 'true',
+      batteryOverlayPosition: 'bottom-left', // top-left | top-right | bottom-left | bottom-right
     },
   },
 })

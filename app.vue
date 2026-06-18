@@ -58,6 +58,7 @@
     </div>
     <DoorbellOverlay />
     <SonosOverlay />
+    <BatteryOverlay />
   </div>
 </template>
 
