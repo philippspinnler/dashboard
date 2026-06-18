@@ -14,6 +14,7 @@ import album from './album.js'
 import inverter from './inverter.js'
 import doorbell from './doorbell.js'
 import heizung from './heizung.js'
+import batteries from './batteries.js'
 
 export const mocks = {
   weather,
@@ -29,4 +30,5 @@ export const mocks = {
   inverter,
   doorbell,
   heizung,
+  batteries,
 }

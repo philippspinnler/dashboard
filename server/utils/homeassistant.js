@@ -37,3 +37,22 @@ export async function haRawState(event, entityId) {
 export async function haEntity(event, entityId) {
   return haGetEntity(event, entityId)
 }
+
+// All entities matching a device_class attribute. Hits HA's /api/states (full
+// dump) — used by the low-battery overlay; one call instead of N per-entity gets.
+export async function haStatesByDeviceClass(event, deviceClass) {
+  const config = useRuntimeConfig(event)
+  const baseUrl = config.homeAssistantUrl
+  const token = config.homeAssistantToken
+  if (!baseUrl || !token) return []
+  try {
+    const all = await $fetch(`${baseUrl}/api/states`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return Array.isArray(all)
+      ? all.filter((e) => e?.attributes?.device_class === deviceClass)
+      : []
+  } catch {
+    return []
+  }
+}
