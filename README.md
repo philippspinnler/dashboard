@@ -12,6 +12,12 @@ corner overlays.
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
 [![Docker](https://img.shields.io/badge/Docker-philippspinnler%2Fdashboard-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/philippspinnler/dashboard)
 
+<br>
+
+![Dashboard screenshot](./docs/screenshot.png)
+
+<sub>Running in mock mode — all widgets and overlays shown with placeholder data.</sub>
+
 </div>
 
 > [!TIP]
