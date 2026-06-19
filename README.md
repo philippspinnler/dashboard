@@ -275,6 +275,11 @@ NUXT_TRANSPORT_CONNECTIONS_JSON=[["Station A","Station B","direct"]]
 | Variable | Description |
 | --- | --- |
 | `NUXT_SPEEDTESTS_JSON` | JSON array of `{ "host", "port", "provider" }` |
+| `NUXT_SPEEDTEST_SOURCE` | `speedtest-tracker` (default) or `iperf` — how each host's `/api/speedtest/latest` is parsed |
+
+With `iperf`, point the hosts at a self-hosted iperf3 collector (runs `iperf3` against a
+public server and serves the latest download/upload over HTTP) instead of a
+[speedtest-tracker](https://github.com/linuxserver/docker-speedtest-tracker) instance.
 
 </details>
 
