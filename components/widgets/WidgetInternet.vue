@@ -6,11 +6,11 @@
       <div class="metric-grid">
         <span class="metric-label">Down</span>
         <Download class="metric-icon" :style="{ color: '#34d399' }" />
-        <span class="metric-value">{{ speedtest.download }}<span class="metric-unit">&nbsp;Gbps</span></span>
+        <span class="metric-value">{{ speedtest.download.num }}<span class="metric-unit">&nbsp;{{ speedtest.download.unit }}</span></span>
 
         <span class="metric-label">Up</span>
         <Upload class="metric-icon" :style="{ color: '#60a5fa' }" />
-        <span class="metric-value">{{ speedtest.upload }}<span class="metric-unit">&nbsp;Gbps</span></span>
+        <span class="metric-value">{{ speedtest.upload.num }}<span class="metric-unit">&nbsp;{{ speedtest.upload.unit }}</span></span>
       </div>
     </div>
   </div>

@@ -55,6 +55,7 @@ export default defineNuxtConfig({
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]
     speedtestsJson: '[]', // JSON: [{ host, port, provider }]
+    speedtestSource: 'speedtest-tracker', // 'speedtest-tracker' | 'iperf' — selects how /api/speedtest/latest is parsed
 
     // Cars (JSON): [{ name, range_entity, state_of_charge_entity,
     //   charging_active_entity, charging_power_entity, end_of_charge_entity }]
