@@ -57,30 +57,15 @@ export default defineNuxtConfig({
     // warningsLabelsJson maps such entity ids to a friendlier name. The watchlist
     // reports enum/state sensors (e.g. the vacuum dock error) whose state isn't
     // in okStates. See docs/superpowers/specs and the README overlay reference.
+    //
+    // These three are declared here so NUXT_WARNINGS_* env vars can override
+    // them, but the real per-home defaults live in server/api/warnings.get.ts —
+    // leaving these empty (or unset in prod) keeps those built-in defaults, so an
+    // empty value passed by Docker Compose never wipes the config.
     batteryThreshold: '25',
-    // The Roborock dock's "cleaning fluid" problem sensor sits `on` permanently
-    // (on = fluid present, not a fault), so exclude it; the other dock problem
-    // sensors (water boxes, water shortage) only fire on a real issue.
-    warningsProblemExclude: 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid',
-    warningsLabelsJson: JSON.stringify({
-      'binary_sensor.softliq_se_bs12005970_has_error': 'Grünbeck',
-      'binary_sensor.s8_maxv_ultra_dock_clean_water_box': 'Staubsauger Frischwasser',
-      'binary_sensor.s8_maxv_ultra_dock_dirty_water_box': 'Staubsauger Schmutzwasser',
-      'binary_sensor.s8_maxv_ultra_water_shortage': 'Staubsauger Wassermangel',
-    }),
-    warningsWatchlistJson: JSON.stringify([
-      {
-        entity_id: 'sensor.s8_maxv_ultra_dock_dock_error',
-        label: 'Staubsauger Dock',
-        okStates: ['none'],
-        messages: { maintenance_brush_jammed: 'Bürste blockiert' },
-      },
-      {
-        entity_id: 'sensor.s8_maxv_ultra_vacuum_error',
-        label: 'Staubsauger',
-        okStates: ['none'],
-      },
-    ]),
+    warningsProblemExclude: '',
+    warningsLabelsJson: '',
+    warningsWatchlistJson: '',
 
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]

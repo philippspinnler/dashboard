@@ -424,14 +424,18 @@ visible while any warning is active:
   robot vacuum error sensor where `none` means healthy).
 
 Nothing is device-specific: a deployment without a given device simply never has
-that sensor, so it never shows. Override any default via the variables below.
+that sensor, so it never shows. The exclude / labels / watchlist vars below ship
+with built-in defaults for the reference install (see
+`server/api/warnings.get.ts`); **leaving them unset keeps those defaults** — an
+empty value never wipes them. Set a non-empty value to override, or an explicit
+`[]` / `{}` to clear.
 
 | Variable | Default | Description |
 | --- | --- | --- |
 | `NUXT_BATTERY_THRESHOLD` | `25` | Include batteries at/below this percentage |
-| `NUXT_WARNINGS_PROBLEM_EXCLUDE` | _(empty)_ | Comma-separated `binary_sensor.*` ids to suppress from the problem provider |
-| `NUXT_WARNINGS_LABELS_JSON` | `{}` | JSON map of `entity_id` → friendly name for problem sensors |
-| `NUXT_WARNINGS_WATCHLIST_JSON` | `[]` | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
+| `NUXT_WARNINGS_PROBLEM_EXCLUDE` | _(built-in)_ | Comma-separated `binary_sensor.*` ids to suppress from the problem provider |
+| `NUXT_WARNINGS_LABELS_JSON` | _(built-in)_ | JSON map of `entity_id` → friendly name for problem sensors |
+| `NUXT_WARNINGS_WATCHLIST_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_POSITION` | `bottom-left` | Corner |
 
