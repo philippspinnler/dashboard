@@ -1,10 +1,6 @@
 <template>
   <Transition name="overlay-pop">
     <div v-if="hasWarnings" class="overlay-corner warnings-overlay" :class="cornerClass">
-      <div class="warnings-header">
-        <WarningTriangle class="warnings-icon" />
-        <span>Warnungen</span>
-      </div>
       <ul class="warnings-list">
         <li v-for="w in warnings" :key="w.id" class="warning-row">
           <component
@@ -49,9 +45,6 @@ function detailColor(w) {
 
 <style scoped>
 .warnings-overlay {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   max-width: 26vw;
   padding: 0.8rem 1rem;
   border-radius: 1rem;
@@ -60,21 +53,6 @@ function detailColor(w) {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-
-.warnings-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.05rem;
-  color: #fff;
-}
-
-.warnings-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-  flex-shrink: 0;
-  color: #ffd24d;
 }
 
 .warnings-list {
