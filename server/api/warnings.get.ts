@@ -125,6 +125,32 @@ function watchWarnings(all: any[], watchlist: WatchEntry[]): Warning[] {
   return out
 }
 
+// Built-in defaults for this deployment. Used whenever the matching env var is
+// unset OR empty — Docker Compose passes an empty string for any var Portainer
+// doesn't define, and an empty string would otherwise wipe these. Override by
+// setting a non-empty value; set an explicit '[]' / '{}' / a sentinel to opt out.
+const DEFAULT_WATCHLIST: WatchEntry[] = [
+  {
+    entity_id: 'sensor.s8_maxv_ultra_dock_dock_error',
+    label: 'Staubsauger Dock',
+    okStates: ['none'],
+    messages: { maintenance_brush_jammed: 'Bürste blockiert' },
+  },
+  { entity_id: 'sensor.s8_maxv_ultra_vacuum_error', label: 'Staubsauger', okStates: ['none'] },
+]
+const DEFAULT_LABELS: Record<string, string> = {
+  'binary_sensor.softliq_se_bs12005970_has_error': 'Grünbeck',
+  'binary_sensor.s8_maxv_ultra_dock_clean_water_box': 'Staubsauger Frischwasser',
+  'binary_sensor.s8_maxv_ultra_dock_dirty_water_box': 'Staubsauger Schmutzwasser',
+  'binary_sensor.s8_maxv_ultra_water_shortage': 'Staubsauger Wassermangel',
+}
+const DEFAULT_EXCLUDE = 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid'
+
+// Env value if provided (non-empty after trim), else the built-in default.
+function envOr(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim() !== '' ? value : fallback
+}
+
 export default defineDashboardCachedHandler(
   async (event) => {
     if (isMockEnabled(event)) return getMock('warnings')
@@ -132,13 +158,15 @@ export default defineDashboardCachedHandler(
     const config = useRuntimeConfig(event)
     const threshold = Number(config.batteryThreshold) || 25
     const exclude = new Set(
-      String(config.warningsProblemExclude || '')
+      envOr(config.warningsProblemExclude, DEFAULT_EXCLUDE)
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
     )
-    const labels = parseJson<Record<string, string>>(config.warningsLabelsJson, {})
-    const watchlist = parseJson<WatchEntry[]>(config.warningsWatchlistJson, [])
+    // parseJson already falls back on an empty/invalid value, so unset (empty)
+    // env vars keep the built-in defaults.
+    const labels = parseJson<Record<string, string>>(config.warningsLabelsJson, DEFAULT_LABELS)
+    const watchlist = parseJson<WatchEntry[]>(config.warningsWatchlistJson, DEFAULT_WATCHLIST)
 
     const all = await haAllStates(event)
 
