@@ -45,7 +45,7 @@ function detailColor(w) {
 
 <style scoped>
 .warnings-overlay {
-  max-width: 26vw;
+  max-width: 44vw;
   padding: 0.8rem 1rem;
   border-radius: 1rem;
   background: rgba(20, 20, 20, 0.45);
