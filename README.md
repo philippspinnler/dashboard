@@ -76,7 +76,7 @@ Not part of the grid — they appear over the background only when relevant.
 | --- | --- |
 | 🎵 **Sonos now-playing** | a speaker is playing |
 | 🔔 **Doorbell** | the doorbell is pressed (live camera feed) |
-| 🪫 **Low battery** | any tracked battery drops below a threshold |
+| ⚠️ **Warnings** | a battery is low, a device reports a problem, or a watched sensor leaves its healthy state |
 
 ### Ambient
 
@@ -106,7 +106,7 @@ services at all via [Mock mode](#-mock-mode).
 | --- | --- | --- |
 | 💻 Running locally | Node.js 20+ and npm | dev / build |
 | 🐳 Running as a container | Docker | deployment |
-| 🏠 Home-automation widgets & all overlays | A **[Home Assistant](https://www.home-assistant.io)** instance + a [long-lived access token](https://www.home-assistant.io/docs/authentication/#your-account-profile), reachable from the dashboard | presence, netatmo, cars, inverter, heizung, Sonos, doorbell, low-battery |
+| 🏠 Home-automation widgets & all overlays | A **[Home Assistant](https://www.home-assistant.io)** instance + a [long-lived access token](https://www.home-assistant.io/docs/authentication/#your-account-profile), reachable from the dashboard | presence, netatmo, cars, inverter, heizung, Sonos, doorbell, warnings |
 | 🌤️ Weather | An [OpenWeatherMap](https://openweathermap.org/api) API key (One Call 3.0) | weather |
 | 📅 Calendar | One or more iCal (`.ics`) URLs | calendar |
 | 🖼️ Photo background | An [Immich](https://immich.app) server **or** an iCloud shared album | background |
@@ -405,18 +405,39 @@ doorbell exposed through Home Assistant).
 </details>
 
 <details>
-<summary><strong>🪫 Low battery</strong></summary>
+<summary><strong>⚠️ Warnings</strong></summary>
 
-Lists Home Assistant entities with `device_class: battery` at or below a threshold
-(excludes `binary_sensor.*` and unknown/unavailable states), sorted lowest-first.
-Color-coded 🔴 red below 10 %, 🟡 yellow below 25 %. Stays visible while any
-battery is low.
+A single card that lists active home warnings from three sources, and stays
+visible while any warning is active:
+
+- **Low batteries** — Home Assistant entities with `device_class: battery` at or
+  below `NUXT_BATTERY_THRESHOLD` (excludes `binary_sensor.*` and
+  unknown/unavailable states), sorted lowest-first. Color-coded 🔴 red below
+  10 %, 🟡 yellow below 25 %.
+- **Problem sensors** — every `binary_sensor` with `device_class: problem` that is
+  `on`. This is Home Assistant's standard "something's wrong" signal, so many
+  devices surface here with no configuration (a water softener's low-salt warning,
+  for example). Sensors carrying an `errors` attribute show the newest active
+  message; an `error`-type entry is drawn 🔴 red.
+- **Watchlist** — enum/state sensors you list in `NUXT_WARNINGS_WATCHLIST_JSON`.
+  Each reports a warning whenever its state isn't one of its `okStates` (e.g. a
+  robot vacuum error sensor where `none` means healthy).
+
+Nothing is device-specific: a deployment without a given device simply never has
+that sensor, so it never shows. Override any default via the variables below.
 
 | Variable | Default | Description |
 | --- | --- | --- |
 | `NUXT_BATTERY_THRESHOLD` | `25` | Include batteries at/below this percentage |
-| `NUXT_PUBLIC_BATTERY_OVERLAY_ENABLED` | `true` | Enable the overlay |
-| `NUXT_PUBLIC_BATTERY_OVERLAY_POSITION` | `bottom-left` | Corner |
+| `NUXT_WARNINGS_PROBLEM_EXCLUDE` | _(empty)_ | Comma-separated `binary_sensor.*` ids to suppress from the problem provider |
+| `NUXT_WARNINGS_LABELS_JSON` | `{}` | JSON map of `entity_id` → friendly name for problem sensors |
+| `NUXT_WARNINGS_WATCHLIST_JSON` | `[]` | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
+| `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |
+| `NUXT_PUBLIC_WARNINGS_OVERLAY_POSITION` | `bottom-left` | Corner |
+
+Watchlist entry shape: `entity_id` (required), `label` (shown name), `okStates`
+(array of healthy states), and optional `messages` (map of state → display text,
+otherwise the raw state is humanized).
 
 </details>
 
@@ -453,7 +474,7 @@ Ideal for local development and previewing layout/overlays.
 app.vue                 # arranges widgets into regions, mounts overlays + photo background
 components/
   widgets/              # one component per grid widget
-  *Overlay.vue          # Sonos / Doorbell / Battery corner overlays
+  *Overlay.vue          # Sonos / Doorbell / Warnings corner overlays
 composables/            # client-side data polling & overlay positioning helpers
 server/
   api/                  # one Nitro route per data source (cached, same-origin)

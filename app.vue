@@ -58,7 +58,7 @@
     </div>
     <DoorbellOverlay />
     <SonosOverlay />
-    <BatteryOverlay />
+    <WarningsOverlay />
   </div>
 </template>
 

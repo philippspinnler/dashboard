@@ -38,9 +38,10 @@ export async function haEntity(event, entityId) {
   return haGetEntity(event, entityId)
 }
 
-// All entities matching a device_class attribute. Hits HA's /api/states (full
-// dump) — used by the low-battery overlay; one call instead of N per-entity gets.
-export async function haStatesByDeviceClass(event, deviceClass) {
+// Full /api/states dump (every entity). Returns [] on missing config/error.
+// One call the caller can filter many ways — the warnings overlay derives
+// batteries, problem sensors and watched entities from a single dump.
+export async function haAllStates(event) {
   const config = useRuntimeConfig(event)
   const baseUrl = config.homeAssistantUrl
   const token = config.homeAssistantToken
@@ -49,10 +50,14 @@ export async function haStatesByDeviceClass(event, deviceClass) {
     const all = await $fetch(`${baseUrl}/api/states`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    return Array.isArray(all)
-      ? all.filter((e) => e?.attributes?.device_class === deviceClass)
-      : []
+    return Array.isArray(all) ? all : []
   } catch {
     return []
   }
+}
+
+// All entities matching a device_class attribute, filtered from the full dump.
+export async function haStatesByDeviceClass(event, deviceClass) {
+  const all = await haAllStates(event)
+  return all.filter((e) => e?.attributes?.device_class === deviceClass)
 }

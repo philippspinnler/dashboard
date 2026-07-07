@@ -50,7 +50,37 @@ export default defineNuxtConfig({
 
     sonosMediaPlayers: '', // comma-separated HA media_player entity ids
 
-    batteryThreshold: '25', // low-battery overlay: include device_class battery entities at/below this %
+    // Warnings overlay (server-side config). The battery provider includes
+    // device_class:battery entities at/below batteryThreshold. The problem
+    // provider auto-surfaces every device_class:problem binary_sensor that is
+    // `on` (e.g. the Grünbeck salt warning) except ids in warningsProblemExclude;
+    // warningsLabelsJson maps such entity ids to a friendlier name. The watchlist
+    // reports enum/state sensors (e.g. the vacuum dock error) whose state isn't
+    // in okStates. See docs/superpowers/specs and the README overlay reference.
+    batteryThreshold: '25',
+    // The Roborock dock's "cleaning fluid" problem sensor sits `on` permanently
+    // (on = fluid present, not a fault), so exclude it; the other dock problem
+    // sensors (water boxes, water shortage) only fire on a real issue.
+    warningsProblemExclude: 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid',
+    warningsLabelsJson: JSON.stringify({
+      'binary_sensor.softliq_se_bs12005970_has_error': 'Grünbeck',
+      'binary_sensor.s8_maxv_ultra_dock_clean_water_box': 'Staubsauger Frischwasser',
+      'binary_sensor.s8_maxv_ultra_dock_dirty_water_box': 'Staubsauger Schmutzwasser',
+      'binary_sensor.s8_maxv_ultra_water_shortage': 'Staubsauger Wassermangel',
+    }),
+    warningsWatchlistJson: JSON.stringify([
+      {
+        entity_id: 'sensor.s8_maxv_ultra_dock_dock_error',
+        label: 'Staubsauger Dock',
+        okStates: ['none'],
+        messages: { maintenance_brush_jammed: 'Bürste blockiert' },
+      },
+      {
+        entity_id: 'sensor.s8_maxv_ultra_vacuum_error',
+        label: 'Staubsauger',
+        okStates: ['none'],
+      },
+    ]),
 
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]
@@ -118,10 +148,11 @@ export default defineNuxtConfig({
       sonosOverlayEnabled: 'true',
       sonosOverlayPosition: 'bottom-right', // top-left | top-right | bottom-left | bottom-right
 
-      // Low-battery overlay: lists HA `device_class: battery` entities at/below
-      // batteryThreshold, shown in a corner while any battery is low.
-      batteryOverlayEnabled: 'true',
-      batteryOverlayPosition: 'bottom-left', // top-left | top-right | bottom-left | bottom-right
+      // Warnings overlay: aggregates low batteries, HA `device_class: problem`
+      // sensors, and configured watchlist entities (see the private warnings*
+      // config above). Shown in a corner while any warning is active.
+      warningsOverlayEnabled: 'true',
+      warningsOverlayPosition: 'bottom-left', // top-left | top-right | bottom-left | bottom-right
     },
   },
 })
