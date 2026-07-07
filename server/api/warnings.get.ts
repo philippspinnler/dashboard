@@ -131,9 +131,11 @@ function watchWarnings(all: any[], watchlist: WatchEntry[]): Warning[] {
 // setting a non-empty value; set an explicit '[]' / '{}' / a sentinel to opt out.
 const DEFAULT_WATCHLIST: WatchEntry[] = [
   {
+    // Roborock enum sensors: the dock-error sensor is healthy at `ok`, the
+    // vacuum-error sensor at `none` (see each entity's `options` attribute).
     entity_id: 'sensor.s8_maxv_ultra_dock_dock_error',
     label: 'Staubsauger Dock',
-    okStates: ['none'],
+    okStates: ['ok'],
     messages: { maintenance_brush_jammed: 'Bürste blockiert' },
   },
   { entity_id: 'sensor.s8_maxv_ultra_vacuum_error', label: 'Staubsauger', okStates: ['none'] },
