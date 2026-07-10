@@ -91,8 +91,9 @@ built-in default):
 
 - `NUXT_WARNINGS_MAINTENANCE_JSON` — override the list (JSON array of
   `MaintenanceEntry`). Empty → `DEFAULT_MAINTENANCE`.
-- `NUXT_MAINTENANCE_THRESHOLD` — hours threshold, default **5**. At 5h, today's
-  strainer (0h) and sensor (2.9h) warn; filter (123h) does not.
+- `NUXT_MAINTENANCE_THRESHOLD` — hours threshold, default **1**. At 1h, today's
+  strainer (0h) warns; sensor (2.9h) and filter (123h) do not. This fires only
+  right at the app's nag point.
 - Add both runtime config keys to `nuxt.config.ts`.
 - Mirror the new `NUXT_*` vars into the homelab `compose.yml` (separate repo),
   commit and push. (See the homelab-compose-env note.)
@@ -121,7 +122,8 @@ Wire the provider into the handler alongside the other four:
 - **Mock mode**: confirm the overlay renders a maintenance row with the wrench
   icon and the verb detail.
 - **Real mode**: hit `/api/warnings` against live `/api/states`; confirm the
-  strainer and sensor surface (verb detail) and the filter does not. Clear
+  strainer (0h) surfaces with its verb detail and the sensor (2.9h) and filter
+  (123h) do not. Clear
   `.nuxt/cache/nitro/handlers` first — real-mode dev serves stale cached API
   responses (see the nitro-dev-cache note).
 
