@@ -1,7 +1,8 @@
-// Sample warnings covering all four provider kinds and both severities:
+// Sample warnings covering all five provider kinds and both severities:
 // two low batteries, a vacuum dock error (watch), a Grünbeck salt error
-// (problem), and a room over the humidity threshold (humidity). Drives the
-// overlay under NUXT_PUBLIC_USE_MOCK_DATA=true.
+// (problem), a room over the humidity threshold (humidity), and a vacuum
+// consumable due for cleaning (maintenance). Drives the overlay under
+// NUXT_PUBLIC_USE_MOCK_DATA=true.
 export default {
   threshold: 25,
   warnings: [
@@ -41,6 +42,13 @@ export default {
       name: 'Technikraum',
       detail: '61%',
       level: 61,
+      severity: 'warning',
+    },
+    {
+      id: 'sensor.vacuum_strainer_time_left',
+      kind: 'maintenance',
+      name: 'Staubsauger Sieb',
+      detail: 'Reinigen',
       severity: 'warning',
     },
   ],
