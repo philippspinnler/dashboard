@@ -1,6 +1,7 @@
-// Sample warnings covering all three provider kinds and both severities:
-// two low batteries, a vacuum dock error (watch), and a Grünbeck salt error
-// (problem). Drives the overlay under NUXT_PUBLIC_USE_MOCK_DATA=true.
+// Sample warnings covering all four provider kinds and both severities:
+// two low batteries, a vacuum dock error (watch), a Grünbeck salt error
+// (problem), and a room over the humidity threshold (humidity). Drives the
+// overlay under NUXT_PUBLIC_USE_MOCK_DATA=true.
 export default {
   threshold: 25,
   warnings: [
@@ -32,6 +33,14 @@ export default {
       kind: 'problem',
       name: 'Grünbeck',
       detail: 'Salzvorrat gering',
+      severity: 'warning',
+    },
+    {
+      id: 'sensor.technikraum_luftsensor_humidity',
+      kind: 'humidity',
+      name: 'Technikraum',
+      detail: '61%',
+      level: 61,
       severity: 'warning',
     },
   ],

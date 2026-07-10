@@ -8,19 +8,28 @@
 //              Grünbeck salt warning surfaces here automatically)
 //   watch    — configured enum/state sensors whose state isn't in `okStates`
 //              (e.g. the vacuum dock error, where `none` means healthy)
+//   humidity — device_class:humidity sensors above humidityThreshold, named by
+//              the room (HA area) they sit in, not the device
 //
 // Each provider emits a normalized warning:
 //   { id, kind, name, detail, level?, severity: 'warning'|'error' }
 
-import { haAllStates } from '../utils/homeassistant'
+import { haAllStates, haTemplate } from '../utils/homeassistant'
 
 type Warning = {
   id: string
-  kind: 'battery' | 'problem' | 'watch'
+  kind: 'battery' | 'problem' | 'watch' | 'humidity'
   name: string
   detail: string
   level?: number
   severity: 'warning' | 'error'
+}
+
+type HumidityRow = {
+  entity_id: string
+  state: string
+  area: string | null
+  name: string
 }
 
 type WatchEntry = {
@@ -125,6 +134,42 @@ function watchWarnings(all: any[], watchlist: WatchEntry[]): Warning[] {
   return out
 }
 
+// One HA template render returns every device_class:humidity sensor with its
+// room (area_name) — the /api/states dump has no area data, so this is how the
+// overlay names a sensor by its room rather than its device. area is null when a
+// sensor has no area assigned, in which case we fall back to its name.
+const HUMIDITY_TEMPLATE =
+  "{% set ns = namespace(items=[]) %}{% for s in states.sensor %}{% if s.attributes.device_class == 'humidity' %}{% set ns.items = ns.items + [{'entity_id': s.entity_id, 'state': s.state, 'area': area_name(s.entity_id), 'name': s.name}] %}{% endif %}{% endfor %}{{ ns.items | tojson }}"
+
+async function humidityWarnings(
+  event: any,
+  threshold: number,
+  exclude: Set<string>,
+): Promise<Warning[]> {
+  const rendered = await haTemplate(event, HUMIDITY_TEMPLATE)
+  const rows = parseJson<HumidityRow[]>(rendered, [])
+  if (!Array.isArray(rows)) return []
+  return rows
+    .filter((r) => r && r.entity_id && !exclude.has(r.entity_id))
+    .map((r) => ({
+      entity_id: r.entity_id,
+      name: r.area || r.name || r.entity_id,
+      level: Number(r.state),
+    }))
+    .filter((r) => !Number.isNaN(r.level) && r.level > threshold)
+    .sort((a, b) => b.level - a.level)
+    .map(
+      (r): Warning => ({
+        id: r.entity_id,
+        kind: 'humidity',
+        name: r.name,
+        detail: `${Math.round(r.level)}%`,
+        level: r.level,
+        severity: 'warning',
+      }),
+    )
+}
+
 // Built-in defaults for this deployment. Used whenever the matching env var is
 // unset OR empty — Docker Compose passes an empty string for any var Portainer
 // doesn't define, and an empty string would otherwise wipe these. Override by
@@ -147,6 +192,10 @@ const DEFAULT_LABELS: Record<string, string> = {
   'binary_sensor.s8_maxv_ultra_water_shortage': 'Staubsauger Wassermangel',
 }
 const DEFAULT_EXCLUDE = 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid'
+// Humidity sensors to skip: the outdoor Terrasse sensor (a humid day outside is
+// not a warning). Heating-loop sensors like the Stiebel ISG aren't
+// device_class:humidity, so they're already excluded.
+const DEFAULT_HUMIDITY_EXCLUDE = 'sensor.terrasse_netatmo_terrasse_humidity'
 
 // Env value if provided (non-empty after trim), else the built-in default.
 function envOr(value: unknown, fallback: string): string {
@@ -165,17 +214,30 @@ export default defineDashboardCachedHandler(
         .map((s) => s.trim())
         .filter(Boolean),
     )
+    const humidityThreshold = Number(config.humidityThreshold) || 60
+    const humidityExclude = new Set(
+      envOr(config.humidityExclude, DEFAULT_HUMIDITY_EXCLUDE)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    )
     // parseJson already falls back on an empty/invalid value, so unset (empty)
     // env vars keep the built-in defaults.
     const labels = parseJson<Record<string, string>>(config.warningsLabelsJson, DEFAULT_LABELS)
     const watchlist = parseJson<WatchEntry[]>(config.warningsWatchlistJson, DEFAULT_WATCHLIST)
 
-    const all = await haAllStates(event)
+    // Humidity needs a separate template render (for room names); fetch it
+    // alongside the shared states dump the other three providers filter.
+    const [all, humidity] = await Promise.all([
+      haAllStates(event),
+      humidityWarnings(event, humidityThreshold, humidityExclude),
+    ])
 
     const warnings: Warning[] = [
       ...batteryWarnings(all, threshold),
       ...problemWarnings(all, exclude, labels),
       ...watchWarnings(all, watchlist),
+      ...humidity,
     ]
 
     return { warnings, threshold }

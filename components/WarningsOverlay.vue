@@ -4,7 +4,7 @@
       <ul class="warnings-list">
         <li v-for="w in warnings" :key="w.id" class="warning-row">
           <component
-            :is="w.kind === 'battery' ? BatteryWarning : WarningTriangle"
+            :is="iconFor(w.kind)"
             class="warning-row-icon"
             :class="{ 'is-error': w.severity === 'error' }"
           />
@@ -23,6 +23,15 @@
 // never poll.
 import BatteryWarning from 'iconoir-vue/regular/BatteryWarning'
 import WarningTriangle from 'iconoir-vue/regular/WarningTriangle'
+import Droplet from 'iconoir-vue/regular/Droplet'
+
+// Icon per warning kind; humidity gets a droplet, everything non-battery a
+// warning triangle.
+function iconFor(kind) {
+  if (kind === 'battery') return BatteryWarning
+  if (kind === 'humidity') return Droplet
+  return WarningTriangle
+}
 
 const cfg = useRuntimeConfig().public
 const enabled = cfg.warningsOverlayEnabled === true || cfg.warningsOverlayEnabled === 'true'
