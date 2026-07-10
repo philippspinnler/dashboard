@@ -24,12 +24,14 @@
 import BatteryWarning from 'iconoir-vue/regular/BatteryWarning'
 import WarningTriangle from 'iconoir-vue/regular/WarningTriangle'
 import Droplet from 'iconoir-vue/regular/Droplet'
+import Wrench from 'iconoir-vue/regular/Wrench'
 
-// Icon per warning kind; humidity gets a droplet, everything non-battery a
-// warning triangle.
+// Icon per warning kind; humidity gets a droplet, maintenance a wrench, and
+// everything else (watch/problem) a warning triangle.
 function iconFor(kind) {
   if (kind === 'battery') return BatteryWarning
   if (kind === 'humidity') return Droplet
+  if (kind === 'maintenance') return Wrench
   return WarningTriangle
 }
 
