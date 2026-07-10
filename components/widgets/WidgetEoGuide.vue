@@ -15,12 +15,14 @@
       <span class="metric-icon"></span>
       <span class="metric-value rating-value">
         <span class="stars">
-          <component
-            v-for="(star, index) in starsArray"
-            :key="index"
-            :is="star.component"
-            :class="star.class"
-          />
+          <template v-for="(star, index) in starsArray" :key="index">
+            <span v-if="star.type === 'half'" class="half-star">
+              <Star class="outline" />
+              <StarSolid class="filled half-fill" />
+            </span>
+            <StarSolid v-else-if="star.type === 'full'" class="filled" />
+            <Star v-else class="outline" />
+          </template>
         </span>
         {{ overall_rating.toFixed(1) }}
       </span>
@@ -31,7 +33,6 @@
 <script setup>
 import Star from 'iconoir-vue/regular/Star'
 import StarSolid from 'iconoir-vue/solid/Star'
-import StarHalfDashed from 'iconoir-vue/regular/StarHalfDashed'
 
 const { data } = useWidgetData('/api/eo-guide', 21600000)
 
@@ -48,12 +49,12 @@ const starsArray = computed(() => {
   const stars = []
 
   const fullStars = Math.floor(roundedRating)
-  for (let i = 0; i < fullStars; i++) stars.push({ component: StarSolid, class: 'filled' })
+  for (let i = 0; i < fullStars; i++) stars.push({ type: 'full' })
 
-  if (roundedRating % 1 !== 0) stars.push({ component: StarHalfDashed, class: 'filled' })
+  if (roundedRating % 1 !== 0) stars.push({ type: 'half' })
 
   const emptyStars = 5 - Math.ceil(roundedRating)
-  for (let i = 0; i < emptyStars; i++) stars.push({ component: Star, class: 'outline' })
+  for (let i = 0; i < emptyStars; i++) stars.push({ type: 'empty' })
 
   return stars
 })
@@ -84,5 +85,19 @@ const starsArray = computed(() => {
 
 .rating-value .outline {
   color: rgba(255, 255, 255, 0.4);
+}
+
+/* Half star: solid star clipped to its left half, layered over an outline star. */
+.half-star {
+  position: relative;
+  display: inline-flex;
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.half-star .half-fill {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 50% 0 0);
 }
 </style>
