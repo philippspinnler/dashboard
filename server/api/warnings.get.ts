@@ -1,15 +1,17 @@
-// Aggregated home warnings for the corner overlay. Three providers, all derived
+// Aggregated home warnings for the corner overlay. Five providers, all derived
 // from a single /api/states dump (batteries, water/vacuum/etc. change slowly, so
 // a 5-minute cache is plenty):
 //
-//   battery  — device_class:battery entities at/below batteryThreshold
-//   problem  — device_class:problem binary_sensors currently `on`
-//              (Home Assistant's standard "something's wrong" signal; the
-//              Grünbeck salt warning surfaces here automatically)
-//   watch    — configured enum/state sensors whose state isn't in `okStates`
-//              (e.g. the vacuum dock error, where `none` means healthy)
-//   humidity — device_class:humidity sensors above humidityThreshold, named by
-//              the room (HA area) they sit in, not the device
+//   battery     — device_class:battery entities at/below batteryThreshold
+//   problem     — device_class:problem binary_sensors currently `on`
+//                 (Home Assistant's standard "something's wrong" signal; the
+//                 Grünbeck salt warning surfaces here automatically)
+//   watch       — configured enum/state sensors whose state isn't in `okStates`
+//                 (e.g. the vacuum dock error, where `none` means healthy)
+//   humidity    — device_class:humidity sensors above humidityThreshold, named by
+//                 the room (HA area) they sit in, not the device
+//   maintenance — configured consumable `*_time_left` (hours) sensors at/below
+//                 maintenanceThreshold (e.g. the vacuum filter/brushes/strainer)
 //
 // Each provider emits a normalized warning:
 //   { id, kind, name, detail, level?, severity: 'warning'|'error' }
@@ -276,7 +278,7 @@ export default defineDashboardCachedHandler(
     )
 
     // Humidity needs a separate template render (for room names); fetch it
-    // alongside the shared states dump the other three providers filter.
+    // alongside the shared states dump the other providers filter.
     const [all, humidity] = await Promise.all([
       haAllStates(event),
       humidityWarnings(event, humidityThreshold, humidityExclude),
