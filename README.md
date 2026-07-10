@@ -76,7 +76,7 @@ Not part of the grid — they appear over the background only when relevant.
 | --- | --- |
 | 🎵 **Sonos now-playing** | a speaker is playing |
 | 🔔 **Doorbell** | the doorbell is pressed (live camera feed) |
-| ⚠️ **Warnings** | a battery is low, a device reports a problem, a watched sensor leaves its healthy state, or a room's humidity is too high |
+| ⚠️ **Warnings** | a battery is low, a device reports a problem, a watched sensor leaves its healthy state, a room's humidity is too high, or a device is due for maintenance |
 
 ### Ambient
 
@@ -407,7 +407,7 @@ doorbell exposed through Home Assistant).
 <details>
 <summary><strong>⚠️ Warnings</strong></summary>
 
-A single card that lists active home warnings from four sources, and stays
+A single card that lists active home warnings from five sources, and stays
 visible while any warning is active:
 
 - **Low batteries** — Home Assistant entities with `device_class: battery` at or
@@ -427,6 +427,10 @@ visible while any warning is active:
   area) it sits in rather than the device name. New sensors appear automatically;
   list ids in `NUXT_HUMIDITY_EXCLUDE` to skip ones you don't want (outdoor or
   heating-loop sensors).
+- **Maintenance** — configured consumable "time left" sensors (hours) at or below
+  `NUXT_MAINTENANCE_THRESHOLD` (default 1 h), e.g. a robot vacuum's filter, brushes,
+  sensors, and dock strainer. Each shows a fixed action label ("Reinigen" /
+  "Wechseln") rather than the raw hours. List entries in `NUXT_WARNINGS_MAINTENANCE_JSON`.
 
 Nothing is device-specific: a deployment without a given device simply never has
 that sensor, so it never shows. The exclude / labels / watchlist vars below ship
@@ -443,6 +447,8 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | `NUXT_WARNINGS_WATCHLIST_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
 | `NUXT_HUMIDITY_THRESHOLD` | `60` | Warn on humidity sensors above this percentage |
 | `NUXT_HUMIDITY_EXCLUDE` | _(built-in)_ | Comma-separated humidity `entity_id`s to skip (default: the outdoor sensor) |
+| `NUXT_MAINTENANCE_THRESHOLD` | `1` | Warn on consumable `*_time_left` sensors at/below this many hours |
+| `NUXT_WARNINGS_MAINTENANCE_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, detail? }` consumables to watch |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_POSITION` | `bottom-left` | Corner |
 
