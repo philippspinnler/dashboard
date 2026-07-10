@@ -76,7 +76,7 @@ Not part of the grid — they appear over the background only when relevant.
 | --- | --- |
 | 🎵 **Sonos now-playing** | a speaker is playing |
 | 🔔 **Doorbell** | the doorbell is pressed (live camera feed) |
-| ⚠️ **Warnings** | a battery is low, a device reports a problem, or a watched sensor leaves its healthy state |
+| ⚠️ **Warnings** | a battery is low, a device reports a problem, a watched sensor leaves its healthy state, or a room's humidity is too high |
 
 ### Ambient
 
@@ -407,7 +407,7 @@ doorbell exposed through Home Assistant).
 <details>
 <summary><strong>⚠️ Warnings</strong></summary>
 
-A single card that lists active home warnings from three sources, and stays
+A single card that lists active home warnings from four sources, and stays
 visible while any warning is active:
 
 - **Low batteries** — Home Assistant entities with `device_class: battery` at or
@@ -422,6 +422,11 @@ visible while any warning is active:
 - **Watchlist** — enum/state sensors you list in `NUXT_WARNINGS_WATCHLIST_JSON`.
   Each reports a warning whenever its state isn't one of its `okStates` (e.g. a
   robot vacuum error sensor where `none` means healthy).
+- **Humidity** — every `device_class: humidity` sensor above
+  `NUXT_HUMIDITY_THRESHOLD` (default 60 %), shown by the **room** (Home Assistant
+  area) it sits in rather than the device name. New sensors appear automatically;
+  list ids in `NUXT_HUMIDITY_EXCLUDE` to skip ones you don't want (outdoor or
+  heating-loop sensors).
 
 Nothing is device-specific: a deployment without a given device simply never has
 that sensor, so it never shows. The exclude / labels / watchlist vars below ship
@@ -436,6 +441,8 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | `NUXT_WARNINGS_PROBLEM_EXCLUDE` | _(built-in)_ | Comma-separated `binary_sensor.*` ids to suppress from the problem provider |
 | `NUXT_WARNINGS_LABELS_JSON` | _(built-in)_ | JSON map of `entity_id` → friendly name for problem sensors |
 | `NUXT_WARNINGS_WATCHLIST_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
+| `NUXT_HUMIDITY_THRESHOLD` | `60` | Warn on humidity sensors above this percentage |
+| `NUXT_HUMIDITY_EXCLUDE` | _(built-in)_ | Comma-separated humidity `entity_id`s to skip (default: the outdoor sensor) |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_POSITION` | `bottom-left` | Corner |
 

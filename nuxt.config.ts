@@ -66,6 +66,13 @@ export default defineNuxtConfig({
     warningsProblemExclude: '',
     warningsLabelsJson: '',
     warningsWatchlistJson: '',
+    // Humidity provider: warn on any device_class:humidity sensor above
+    // humidityThreshold (%), named by its HA room. humidityExclude is a
+    // comma-separated list of entity ids to skip; the real default (the outdoor
+    // Terrasse sensor) lives in server/api/warnings.get.ts so an empty value
+    // from Docker Compose keeps it.
+    humidityThreshold: '60', // NUXT_HUMIDITY_THRESHOLD
+    humidityExclude: '', // NUXT_HUMIDITY_EXCLUDE
 
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]

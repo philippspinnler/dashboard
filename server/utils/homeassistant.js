@@ -61,3 +61,25 @@ export async function haStatesByDeviceClass(event, deviceClass) {
   const all = await haAllStates(event)
   return all.filter((e) => e?.attributes?.device_class === deviceClass)
 }
+
+// Render a Jinja template via HA's REST template endpoint and return the raw
+// rendered string (or null on missing config/error). Unlike /api/states this can
+// reach registry data — e.g. `area_name(entity_id)` for an entity's room, which
+// the warnings overlay uses to name humidity sensors by area. The endpoint
+// returns text/plain, so we ask $fetch not to JSON-parse it.
+export async function haTemplate(event, template) {
+  const config = useRuntimeConfig(event)
+  const baseUrl = config.homeAssistantUrl
+  const token = config.homeAssistantToken
+  if (!baseUrl || !token || !template) return null
+  try {
+    return await $fetch(`${baseUrl}/api/template`, {
+      method: 'POST',
+      body: { template },
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: 'text',
+    })
+  } catch {
+    return null
+  }
+}
