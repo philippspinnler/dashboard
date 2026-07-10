@@ -74,6 +74,13 @@ export default defineNuxtConfig({
     humidityThreshold: '60', // NUXT_HUMIDITY_THRESHOLD
     humidityExclude: '', // NUXT_HUMIDITY_EXCLUDE
 
+    // Maintenance provider: warn on configured vacuum consumable "*_time_left"
+    // (hours) sensors at/below maintenanceThreshold. The per-home default list
+    // lives in server/api/warnings.get.ts so an empty value from Docker Compose
+    // keeps it.
+    maintenanceThreshold: '1', // NUXT_MAINTENANCE_THRESHOLD
+    warningsMaintenanceJson: '', // NUXT_WARNINGS_MAINTENANCE_JSON
+
     calendarsJson: '[]', // JSON: [{ name, color, icalUrl }]
     transportConnectionsJson: '[]', // JSON: [[from, to, "direct"|"..."]]
     speedtestsJson: '[]', // JSON: [{ host, port, provider }]

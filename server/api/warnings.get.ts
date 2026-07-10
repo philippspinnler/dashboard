@@ -18,7 +18,7 @@ import { haAllStates, haTemplate } from '../utils/homeassistant'
 
 type Warning = {
   id: string
-  kind: 'battery' | 'problem' | 'watch' | 'humidity'
+  kind: 'battery' | 'problem' | 'watch' | 'humidity' | 'maintenance'
   name: string
   detail: string
   level?: number
@@ -37,6 +37,12 @@ type WatchEntry = {
   label?: string
   okStates?: string[]
   messages?: Record<string, string>
+}
+
+type MaintenanceEntry = {
+  entity_id: string
+  label: string
+  detail?: string
 }
 
 const UNKNOWN = new Set(['unknown', 'unavailable', ''])
@@ -134,6 +140,36 @@ function watchWarnings(all: any[], watchlist: WatchEntry[]): Warning[] {
   return out
 }
 
+// Roborock consumables expose a "*_time_left" countdown in hours; when one
+// reaches zero the vacuum app nags to clean/replace that part. Warn on any
+// configured consumable at/below `threshold` hours. detail is a fixed action
+// verb (the raw "0 h" reads oddly), defaulting to 'Reinigen'.
+function maintenanceWarnings(
+  all: any[],
+  watchlist: MaintenanceEntry[],
+  threshold: number,
+): Warning[] {
+  const byId = new Map(all.map((e: any) => [e.entity_id, e]))
+  const out: Warning[] = []
+  for (const w of watchlist) {
+    if (!w || !w.entity_id) continue
+    const entity = byId.get(w.entity_id)
+    if (!entity) continue
+    const state = String(entity.state)
+    if (UNKNOWN.has(state.toLowerCase())) continue
+    const hours = Number(state)
+    if (Number.isNaN(hours) || hours > threshold) continue
+    out.push({
+      id: w.entity_id,
+      kind: 'maintenance',
+      name: w.label || entity.attributes?.friendly_name || w.entity_id,
+      detail: w.detail || 'Reinigen',
+      severity: 'warning',
+    })
+  }
+  return out
+}
+
 // One HA template render returns every device_class:humidity sensor with its
 // room (area_name) — the /api/states dump has no area data, so this is how the
 // overlay names a sensor by its room rather than its device. area is null when a
@@ -185,6 +221,14 @@ const DEFAULT_WATCHLIST: WatchEntry[] = [
   },
   { entity_id: 'sensor.s8_maxv_ultra_vacuum_error', label: 'Staubsauger', okStates: ['none'] },
 ]
+const DEFAULT_MAINTENANCE: MaintenanceEntry[] = [
+  { entity_id: 'sensor.s8_maxv_ultra_filter_time_left', label: 'Staubsauger Filter', detail: 'Reinigen' },
+  { entity_id: 'sensor.s8_maxv_ultra_dock_strainer_time_left', label: 'Staubsauger Sieb', detail: 'Reinigen' },
+  { entity_id: 'sensor.s8_maxv_ultra_sensor_time_left', label: 'Staubsauger Sensoren', detail: 'Reinigen' },
+  { entity_id: 'sensor.s8_maxv_ultra_main_brush_time_left', label: 'Staubsauger Hauptbürste', detail: 'Wechseln' },
+  { entity_id: 'sensor.s8_maxv_ultra_side_brush_time_left', label: 'Staubsauger Seitenbürste', detail: 'Wechseln' },
+  { entity_id: 'sensor.s8_maxv_ultra_dock_maintenance_brush_time_left', label: 'Staubsauger Dock-Bürste', detail: 'Wechseln' },
+]
 const DEFAULT_LABELS: Record<string, string> = {
   'binary_sensor.softliq_se_bs12005970_has_error': 'Grünbeck',
   'binary_sensor.s8_maxv_ultra_dock_clean_water_box': 'Staubsauger Frischwasser',
@@ -225,6 +269,11 @@ export default defineDashboardCachedHandler(
     // env vars keep the built-in defaults.
     const labels = parseJson<Record<string, string>>(config.warningsLabelsJson, DEFAULT_LABELS)
     const watchlist = parseJson<WatchEntry[]>(config.warningsWatchlistJson, DEFAULT_WATCHLIST)
+    const maintenanceThreshold = Number(config.maintenanceThreshold) || 1
+    const maintenanceList = parseJson<MaintenanceEntry[]>(
+      config.warningsMaintenanceJson,
+      DEFAULT_MAINTENANCE,
+    )
 
     // Humidity needs a separate template render (for room names); fetch it
     // alongside the shared states dump the other three providers filter.
@@ -238,6 +287,7 @@ export default defineDashboardCachedHandler(
       ...problemWarnings(all, exclude, labels),
       ...watchWarnings(all, watchlist),
       ...humidity,
+      ...maintenanceWarnings(all, maintenanceList, maintenanceThreshold),
     ]
 
     return { warnings, threshold }
