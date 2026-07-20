@@ -1,6 +1,6 @@
 import ical from 'node-ical'
-import { RRule } from 'rrule'
 import dayjs from '~/lib/datetime'
+import { collectEvents } from '~/lib/ical-events'
 
 // Ports dashboard-api/app/plugins/ical.py — pulls VEVENTs from each configured
 // iCal URL over a 3-day window (incl. recurring expansion), tags birthdays, and
@@ -20,55 +20,13 @@ async function getEventsFromUrl(url: string, name: string, color: string, timezo
   const data = await ical.async.fromURL(url)
 
   const now = dayjs().tz(timezone)
-  const windowStart = now.startOf('day')
-  const windowEnd = now.add(3, 'day').endOf('day')
-
-  const events: CalEvent[] = []
-  for (const key of Object.keys(data)) {
-    const ev: any = data[key]
-    if (ev?.type !== 'VEVENT') continue
-
-    const allDay = ev.datetype === 'date'
-    const summary = typeof ev.summary === 'string' ? ev.summary : ev.summary?.val || ''
-
-    const push = (when: Date) => {
-      const d = dayjs(when).tz(timezone)
-      events.push({
-        summary,
-        start_date: d.format(),
-        start_time: d.format('HH:mm'),
-        all_day: allDay,
-        name,
-        color,
-      })
-    }
-
-    if (ev.rrule) {
-      let rule = ev.rrule
-      // Parity with ical.py: yearly recurrences that set BYMONTHDAY but not
-      // BYMONTH recur every month — pin them to the DTSTART month so birthdays
-      // and anniversaries land correctly.
-      const o = rule.origOptions || {}
-      const hasBymonthday = o.bymonthday != null && (!Array.isArray(o.bymonthday) || o.bymonthday.length > 0)
-      const hasBymonth = o.bymonth != null && (!Array.isArray(o.bymonth) || o.bymonth.length > 0)
-      if (o.freq === RRule.YEARLY && hasBymonthday && !hasBymonth) {
-        const dtstart = rule.options.dtstart
-        const month = dtstart ? dtstart.getUTCMonth() + 1 : dayjs(ev.start).tz(timezone).month() + 1
-        rule = new RRule({ ...o, dtstart, bymonth: month })
-      }
-      // Note: known node-ical/rrule timezone caveat for DST-crossing recurrences;
-      // acceptable here since these feed a wall-clock HH:mm display.
-      for (const occ of rule.between(windowStart.toDate(), windowEnd.toDate(), true)) {
-        push(occ)
-      }
-    } else {
-      const start = dayjs(ev.start).tz(timezone)
-      if ((start.isAfter(windowStart) || start.isSame(windowStart)) && start.isBefore(windowEnd)) {
-        push(ev.start)
-      }
-    }
-  }
-  return events
+  return collectEvents(data, {
+    name,
+    color,
+    timezone,
+    windowStart: now.startOf('day'),
+    windowEnd: now.add(3, 'day').endOf('day'),
+  })
 }
 
 // Parity with handle_special_events(): birthdays/anniversaries are detected by a
