@@ -1,9 +1,13 @@
+import { classifyProducts, sumActiveSubscriptions } from '~/lib/subscriptions'
+
 // EO-Guide stats for the widget: active subscriptions (yearly / monthly) + the
 // overall App Store rating. Cache TTL mirrors @cache(expire=21_600).
 //
 // Subscription products are discovered from the account and classified by name
 // ("... Yearly ..." / "... Monthly ..."), so adding/renaming a plan needs no
-// config change. active_subscriptions per product is summed per class.
+// config change. active_subscriptions per product is summed per class; rows
+// with subscribers but zero lifetime revenue are dropped as phantom data (see
+// lib/subscriptions.js).
 export default defineDashboardCachedHandler(
   async (event) => {
     if (isMockEnabled(event)) return getMock('eo-guide')
@@ -25,13 +29,7 @@ export default defineDashboardCachedHandler(
       }),
     ])
 
-    const yearlyIds: string[] = []
-    const monthlyIds: string[] = []
-    for (const [pid, p] of Object.entries<any>(products || {})) {
-      const name = p?.name || ''
-      if (/yearly/i.test(name)) yearlyIds.push(pid)
-      else if (/monthly/i.test(name)) monthlyIds.push(pid)
-    }
+    const { yearlyIds, monthlyIds } = classifyProducts(products)
 
     let yearly = 0
     let monthly = 0
@@ -41,9 +39,8 @@ export default defineDashboardCachedHandler(
         query: { client_key: clientKey, group_by: 'product', products: allIds.join(',') },
         headers,
       })
-      const active = (id: string) => Number(subs?.[id]?.active_subscriptions || 0)
-      yearly = yearlyIds.reduce((s, id) => s + active(id), 0)
-      monthly = monthlyIds.reduce((s, id) => s + active(id), 0)
+      yearly = sumActiveSubscriptions(subs, yearlyIds)
+      monthly = sumActiveSubscriptions(subs, monthlyIds)
     }
 
     return {
