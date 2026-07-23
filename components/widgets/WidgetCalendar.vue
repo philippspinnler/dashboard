@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-for="day in filteredDays" :key="day.day">
+    <div v-for="day in filteredDays" :key="day.date">
       <div class="date-container">
         <div class="day">
           <h1 class="title">{{ day.day }}</h1>

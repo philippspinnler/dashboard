@@ -3,8 +3,9 @@ import dayjs from '~/lib/datetime'
 import { collectEvents } from '~/lib/ical-events'
 
 // Ports dashboard-api/app/plugins/ical.py — pulls VEVENTs from each configured
-// iCal URL over a 3-day window (incl. recurring expansion), tags birthdays, and
-// groups by day. Cache TTL mirrors @cache(expire=900).
+// iCal URL over a 14-day window (incl. recurring expansion), tags birthdays, and
+// groups by day. The widget trims the list to what fits on screen, so the window
+// only needs to be long enough to keep it filled. Cache TTL mirrors @cache(expire=900).
 
 interface CalEvent {
   summary: string
@@ -25,7 +26,7 @@ async function getEventsFromUrl(url: string, name: string, color: string, timezo
     color,
     timezone,
     windowStart: now.startOf('day'),
-    windowEnd: now.add(3, 'day').endOf('day'),
+    windowEnd: now.add(14, 'day').endOf('day'),
   })
 }
 
