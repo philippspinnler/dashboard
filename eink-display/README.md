@@ -1,10 +1,16 @@
 # 🪶 E-ink display companion
 
 An ESP8266 + Waveshare 7.5" e-Paper panel showing a black-and-white
-subset of the dashboard (clock, calendar, inverter). The screen is
-rendered **server-side** by the main app; the firmware just downloads
-`/api/eink/screen.bin` (800×480, 1 bit/pixel) every minute and streams
-it to the panel.
+subset of the dashboard: clock, calendar, solar inverter, who's home
+(away people shown in a dithered "grey"), and internet speed — plus a
+warnings box that appears only when something needs attention. The
+screen is rendered **server-side** by the main app; the firmware just
+downloads `/api/eink/screen.bin` (800×480, 1 bit/pixel) every minute and
+streams it to the panel.
+
+> The panel is physically 1-bit black/white, so "grey" is a halftone
+> dither, not true grayscale — the layout stays crisp black text with a
+> lighter dot pattern for de-emphasised items.
 
 ## Hardware
 
