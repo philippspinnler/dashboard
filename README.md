@@ -45,7 +45,7 @@ corner overlays.
   - [Photo background](#photo-background)
 - [🧪 Mock mode](#-mock-mode)
 - [🗂️ Project structure](#️-project-structure)
-- [🪶 E-ink companion](./eink-display/README.md)
+- [🪶 E-ink companion](#-e-ink-companion)
 
 ---
 
@@ -510,7 +510,15 @@ nuxt.config.ts          # runtimeConfig — the full list of settings & defaults
 eink-display/           # PlatformIO firmware for the e-ink companion — see eink-display/README.md
 ```
 
+---
+
+## 🪶 E-ink companion
+
+A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, calendar, and inverter data in black and white on a second, always-on screen. The display is rendered server-side and served as a 1-bit image frame:
+
 | Endpoint | Purpose |
 | --- | --- |
 | `/api/eink/screen.bin` | Raw 48,000-byte 1-bit frame (800×480) for the e-ink companion's ESP8266 |
 | `/api/eink/screen.png` | Same frame as PNG, for browser preview |
+
+See [`eink-display/README.md`](./eink-display/README.md) for hardware and flashing instructions.
