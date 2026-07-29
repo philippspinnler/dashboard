@@ -14,6 +14,11 @@
 const W = 800
 const H = 480
 
+// Column split: calendar left of the divider, sections right of it. The right
+// column runs from RX to the right margin.
+const DIVIDER_X = 466
+const RX = 482
+
 // Font sizes in one place — the readable/compact tradeoff lives here.
 const FS = {
   clock: 64,
@@ -145,41 +150,40 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   }
 
   // column divider
-  parts.push(`<line x1="498" y1="104" x2="498" y2="${H - 44}" stroke="black" stroke-width="1"/>`)
+  parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${H - 44}" stroke="black" stroke-width="1"/>`)
 
-  const rx = 514
+  const rx = RX
 
   // --- right column: Energie (inverter, no bar) ---
-  parts.push(`<text x="${rx}" y="122" font-size="${FS.section}" font-weight="bold">Energie</text>`)
+  parts.push(`<text x="${rx}" y="124" font-size="${FS.section}" font-weight="bold">Energie</text>`)
   if (!inverter) {
-    parts.push(`<text x="${rx}" y="150" font-size="${FS.metric}">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="152" font-size="${FS.metric}">Keine Daten</text>`)
   } else {
     const grid = gridCompact(inverter)
     const bat = batteryCompact(inverter)
-    parts.push(metricLine(rx, 150, 'PV', formatWatts(inverter.pv_power)))
-    parts.push(metricLine(rx, 178, 'Verbrauch', formatWatts(inverter.power_consumption)))
-    parts.push(metricLine(rx, 206, grid[0], grid[1]))
-    parts.push(metricLine(rx, 234, bat[0], bat[1]))
+    parts.push(metricLine(rx, 152, 'PV', formatWatts(inverter.pv_power)))
+    parts.push(metricLine(rx, 180, 'Verbrauch', formatWatts(inverter.power_consumption)))
+    parts.push(metricLine(rx, 208, grid[0], grid[1]))
+    parts.push(metricLine(rx, 236, bat[0], bat[1]))
   }
 
-  // --- right column: Internet (speedtest) ---
-  parts.push(`<text x="${rx}" y="266" font-size="${FS.section}" font-weight="bold">Internet</text>`)
+  // --- right column: Internet (speedtest) — down + up on one line ---
+  parts.push(`<text x="${rx}" y="272" font-size="${FS.section}" font-weight="bold">Internet</text>`)
   const speed = (speedtest && speedtest[0]) || null
   const down = speed && speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
   const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
-  parts.push(metricLine(rx, 294, '↓', down))
-  parts.push(metricLine(rx, 322, '↑', up))
+  parts.push(`<text x="${rx}" y="300" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
 
   // --- right column: Heizung (status + inside/outside temp only) ---
-  parts.push(`<text x="${rx}" y="354" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
+  parts.push(`<text x="${rx}" y="338" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
   if (!heizung) {
-    parts.push(`<text x="${rx}" y="382" font-size="${FS.metric}">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="366" font-size="${FS.metric}">Keine Daten</text>`)
   } else {
     const status = heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus'
-    parts.push(metricLine(rx, 382, 'Status', status))
+    parts.push(metricLine(rx, 366, 'Status', status))
     const inside = formatTemp(heizung.room_actual)
     const outside = formatTemp(heizung.outdoor)
-    parts.push(`<text x="${rx}" y="410" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
+    parts.push(`<text x="${rx}" y="394" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
   }
 
   // footer: last-updated stamp
@@ -190,7 +194,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   // Internet blocks stay fully visible; warnings are home-related and read
   // naturally under the calendar.
   if (warnShown) {
-    const boxW = 466
+    const boxW = DIVIDER_X - 24 - 8 // left margin to just before the divider
     parts.push(`<rect x="24" y="${warnTop}" width="${boxW}" height="${warnBoxH}" fill="white" stroke="black" stroke-width="2"/>`)
     parts.push(`<text x="40" y="${warnTop + 22}" font-size="${FS.warnTitle}" font-weight="bold">Hinweise</text>`)
     let wy = warnTop + 46
