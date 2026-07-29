@@ -72,6 +72,22 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('…')
   })
 
+  it('truncates emoji without splitting surrogates', () => {
+    const emojiSummary = '🎉'.repeat(40)
+    const emojiDays = [
+      {
+        day: 'Heute',
+        date: '29. Juli',
+        events: [{ summary: emojiSummary, start_time: '09:00', all_day: false, name: 'Party' }],
+      },
+    ]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: emojiDays, inverter })
+    // Must not contain lone surrogates (U+FFFD replacement character)
+    expect(svg).not.toContain('�')
+    // Must contain truncated emoji plus ellipsis (33 emoji + '…')
+    expect(svg).toContain('🎉'.repeat(33) + '…')
+  })
+
   it('keeps every drawn element within the 800x480 canvas', () => {
     const bigDays = Array.from({ length: 8 }, (_, i) => ({
       day: 'Tag ' + i,
