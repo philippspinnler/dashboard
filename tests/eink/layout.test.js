@@ -105,14 +105,17 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('🎉'.repeat(31) + '…')
   })
 
-  it('renders home people in solid black and away people in the grey pattern', () => {
+  it('renders presence as a right-anchored row: home black, away grey, no label', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, presence })
-    // home names in a plain text element (no grey fill)
-    const homeLine = svg.match(/<text[^>]*>Philipp, Anna<\/text>/)
-    expect(homeLine).not.toBeNull()
-    expect(homeLine[0]).not.toContain('url(#grey)')
-    // away name in a grey-filled text element
-    expect(svg).toMatch(/<text[^>]*fill="url\(#grey\)"[^>]*>Max<\/text>/)
+    // one right-anchored text with a tspan per name
+    expect(svg).toMatch(/<text[^>]*text-anchor="end"[^>]*><tspan/)
+    // home names in plain tspans (no grey fill)
+    expect(svg).toMatch(/<tspan>Philipp<\/tspan>/)
+    expect(svg).toMatch(/<tspan>\s+Anna<\/tspan>/)
+    // away name in a grey-filled tspan
+    expect(svg).toMatch(/<tspan fill="url\(#grey\)">\s*Max<\/tspan>/)
+    // no "Zuhause" label anymore
+    expect(svg).not.toContain('Zuhause')
   })
 
   it('renders speedtest download and upload values', () => {
