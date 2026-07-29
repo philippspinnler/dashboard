@@ -31,7 +31,6 @@ const FS = {
   metric: 18, // metric value lines
   warnTitle: 16,
   warn: 16,
-  footer: 14,
 }
 
 // url() reference to the halftone pattern defined in <defs>. 1 black px per 2x2
@@ -222,7 +221,9 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const warnTop = warnBottom - warnBoxH
 
   // --- left column: calendar ---
-  const calBottom = warnShown ? warnTop - 10 : H - 24
+  // 8px bottom edge margin (no footer to leave room for); when warnings show,
+  // stop above the overlay box instead.
+  const calBottom = warnShown ? warnTop - 10 : H - 8
   let y = 122
   if (!days || days.length === 0) {
     parts.push(`<text x="24" y="${y}" font-size="${FS.event}">Keine Termine</text>`)
@@ -285,9 +286,6 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     const outside = formatTemp(netatmo ? netatmo.outdoor_temperature : null)
     parts.push(`<text x="${rx}" y="394" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
   }
-
-  // footer: last-updated stamp
-  parts.push(`<text x="${W - 24}" y="${H - 14}" font-size="${FS.footer}" text-anchor="end">Stand ${escapeXml(time)}</text>`)
 
   // --- warnings overlay (only when something is actually wrong) ---
   // Constrained to the left (calendar) column so the right column's Energie /
