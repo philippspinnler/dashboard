@@ -22,7 +22,7 @@ const RX = 482
 // Font sizes in one place — the readable/compact tradeoff lives here.
 const FS = {
   clock: 64,
-  date: 24,
+  date: 22,
   presence: 20,
   dayHeader: 20,
   event: 18,
@@ -112,7 +112,58 @@ function giftIcon(x, top, size) {
   )
 }
 
-export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung, netatmo }) {
+// Weather icons — simple filled/stroked vector shapes in a 24-unit box, keyed
+// off the OpenWeatherMap icon code (01–50 + d/n). Drawn as 1-bit-friendly black
+// on white; the panel can't show OWM's colour PNGs.
+function sunRays(cx, cy, r) {
+  const rays = []
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI / 4) * i
+    const x1 = (cx + Math.cos(a) * (r + 1.6)).toFixed(1)
+    const y1 = (cy + Math.sin(a) * (r + 1.6)).toFixed(1)
+    const x2 = (cx + Math.cos(a) * (r + 4.4)).toFixed(1)
+    const y2 = (cy + Math.sin(a) * (r + 4.4)).toFixed(1)
+    rays.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`)
+  }
+  return `<g stroke="black" stroke-width="1.6" stroke-linecap="round">${rays.join('')}</g>`
+}
+
+function weatherIcon(code, x, top, size) {
+  const s = size / 24
+  const g = (inner) => `<g class="wx" transform="translate(${x} ${top}) scale(${s})">${inner}</g>`
+  const kind = String(code || '').slice(0, 2)
+  const night = String(code || '').endsWith('n')
+  const cloud = '<g fill="black"><circle cx="9" cy="14" r="4"/><circle cx="15.5" cy="14" r="4.6"/>'
+    + '<circle cx="12" cy="10.8" r="4.8"/><rect x="8.5" y="13.6" width="10" height="5.2"/></g>'
+  const rain = '<g stroke="black" stroke-width="1.7" stroke-linecap="round">'
+    + '<line x1="9" y1="19.5" x2="7.8" y2="23"/><line x1="12.5" y1="19.5" x2="11.3" y2="23"/>'
+    + '<line x1="16" y1="19.5" x2="14.8" y2="23"/></g>'
+  switch (kind) {
+    case '01':
+      return night
+        ? g('<circle cx="12" cy="12" r="6.5" fill="black"/><circle cx="14.6" cy="9.8" r="5.6" fill="white"/>')
+        : g(`${sunRays(12, 12, 5)}<circle cx="12" cy="12" r="5" fill="black"/>`)
+    case '02':
+      return g(`${sunRays(8, 8, 3.3)}<circle cx="8" cy="8" r="3.3" fill="black"/>${cloud}`)
+    case '03':
+    case '04':
+      return g(cloud)
+    case '09':
+    case '10':
+      return g(cloud + rain)
+    case '11':
+      return g(cloud + '<path fill="black" d="M12.6 18.5 L9.6 22.6 L11.7 22.6 L10.4 26 L15 20.7 L12.4 20.7 Z"/>')
+    case '13':
+      return g(cloud + '<g fill="black"><circle cx="9" cy="21.6" r="1.1"/><circle cx="13" cy="22.2" r="1.1"/><circle cx="16.6" cy="21.6" r="1.1"/></g>')
+    case '50':
+      return g('<g stroke="black" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/>'
+        + '<line x1="4" y1="13" x2="20" y2="13"/><line x1="4" y1="17" x2="20" y2="17"/></g>')
+    default:
+      return g(cloud)
+  }
+}
+
+export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung, netatmo, weather }) {
   const parts = []
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans">`)
   // Halftone pattern for "grey" text on the 1-bit panel: 1 black px per 2x2 tile.
@@ -136,7 +187,22 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
       .join('')
     parts.push(`<text x="${W - 24}" y="34" font-size="${FS.presence}" text-anchor="end">${spans}</text>`)
   }
-  parts.push(`<text x="${W - 24}" y="68" font-size="${FS.date}" text-anchor="end">${escapeXml(date)}</text>`)
+  // today's weather in the top-right corner (icon + low/high); the date shifts
+  // left to make room. Icon uses the CURRENT conditions; temps are today's
+  // forecast min/max.
+  const today = weather && weather.daily && weather.daily[0]
+  const cur = weather && weather.current && weather.current.weather && weather.current.weather[0]
+  const code = cur ? cur.icon : today && today.weather && today.weather[0] ? today.weather[0].icon : null
+  const hasWeather = code && today && today.temperature
+  if (hasWeather) {
+    const tmin = Math.round(Number(today.temperature.min))
+    const tmax = Math.round(Number(today.temperature.max))
+    parts.push(`<text x="636" y="68" font-size="${FS.date}" text-anchor="end">${escapeXml(date)}</text>`)
+    parts.push(weatherIcon(code, 650, 42, 26))
+    parts.push(`<text x="${W - 24}" y="68" font-size="${FS.date}" text-anchor="end">${tmin}° ${tmax}°</text>`)
+  } else {
+    parts.push(`<text x="${W - 24}" y="68" font-size="${FS.date}" text-anchor="end">${escapeXml(date)}</text>`)
+  }
   parts.push(`<line x1="24" y1="88" x2="${W - 24}" y2="88" stroke="black" stroke-width="2"/>`)
 
   // --- warnings overlay geometry (drawn last, but sized up front so the
