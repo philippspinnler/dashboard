@@ -20,20 +20,22 @@ function formatWatts(w) {
   return Math.round(abs) + ' W'
 }
 
-function gridLine(inv) {
+// Direction words go into the small label line, not the bold 30px value —
+// "Einspeisung 5,32 kW" as a value overflows the 800px canvas in DejaVu Bold.
+function gridRow(inv) {
   const cons = Number(inv.grid_consumption) || 0
   const feed = Number(inv.grid_feedin) || 0
-  if (cons > 10) return 'Bezug ' + formatWatts(cons)
-  if (feed > 10) return 'Einspeisung ' + formatWatts(feed)
-  return '0 W'
+  if (cons > 10) return ['Netz · Bezug', formatWatts(cons)]
+  if (feed > 10) return ['Netz · Einspeisung', formatWatts(feed)]
+  return ['Netz', '0 W']
 }
 
-function batteryLine(inv) {
+function batteryRow(inv) {
   const soc = Math.round(Number(inv.battery_state_of_charge) || 0)
   const p = Number(inv.battery_power) || 0
-  if (p > 25) return soc + ' % · lädt'
-  if (p < -25) return soc + ' % · entlädt'
-  return soc + ' %'
+  if (p > 25) return ['Batterie · lädt', soc + ' %']
+  if (p < -25) return ['Batterie · entlädt', soc + ' %']
+  return ['Batterie', soc + ' %']
 }
 
 function eventLine(e) {
@@ -81,8 +83,8 @@ export function buildScreenSvg({ time, date, days, inverter }) {
     const rows = [
       ['Produktion', formatWatts(inverter.pv_power)],
       ['Verbrauch', formatWatts(inverter.power_consumption)],
-      ['Netz', gridLine(inverter)],
-      ['Batterie', batteryLine(inverter)],
+      gridRow(inverter),
+      batteryRow(inverter),
     ]
     let ry = 210
     for (const [label, value] of rows) {
