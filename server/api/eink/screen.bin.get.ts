@@ -6,7 +6,7 @@ import { renderEinkFrame } from '../../utils/eink/render.js'
 // handlers keep their own TTL caches.
 export default defineEventHandler(async (event) => {
   const frame = await renderEinkFrame(event)
-  setHeader(event, 'Content-Type', 'application/octet-stream')
-  setHeader(event, 'Cache-Control', 'no-store')
+  setHeader(event, 'content-type', 'application/octet-stream')
+  setHeader(event, 'cache-control', 'no-store')
   return frame
 })

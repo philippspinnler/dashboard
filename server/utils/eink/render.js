@@ -6,6 +6,13 @@ import { packRgbaTo1Bit } from './pack.js'
 // Renders the full e-ink frame: data via the existing (cached) API handlers,
 // SVG layout, resvg rasterization with bundled fonts (deterministic in Docker —
 // no system fonts), then 1-bit packing for the panel.
+//
+// Error handling is intentional: data-source failures (calendar, inverter) are
+// caught below and render as fallback sections, so the frame always builds.
+// Genuine render failures (missing font asset, resvg error) intentionally
+// propagate as an HTTP error instead of being swallowed — the display firmware
+// keeps showing the last frame on any non-200 response, so a loud failure here
+// is safer than silently serving a blank/broken frame.
 
 let fontsPromise
 function loadFonts() {
@@ -13,6 +20,11 @@ function loadFonts() {
     useStorage('assets:server').getItemRaw('fonts/DejaVuSans.ttf'),
     useStorage('assets:server').getItemRaw('fonts/DejaVuSans-Bold.ttf'),
   ])
+    .then(([sans, sansBold]) => [Buffer.from(sans), Buffer.from(sansBold)])
+    .catch((err) => {
+      fontsPromise = undefined
+      throw err
+    })
   return fontsPromise
 }
 
@@ -38,7 +50,7 @@ export async function renderEinkFrame(event) {
   const resvg = new Resvg(svg, {
     background: '#ffffff',
     font: {
-      fontBuffers: [Buffer.from(sans), Buffer.from(sansBold)],
+      fontBuffers: [sans, sansBold],
       loadSystemFonts: false,
       defaultFontFamily: 'DejaVu Sans',
     },
