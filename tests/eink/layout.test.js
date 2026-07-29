@@ -21,6 +21,23 @@ const days = [
   },
 ]
 
+const presence = {
+  persons: [
+    { name: 'Philipp', state: 'home' },
+    { name: 'Anna', state: 'home' },
+    { name: 'Max', state: 'not_home' },
+  ],
+}
+
+const speedtest = [{ provider: 'Init7', download: { num: '9.45', unit: 'Gbps' }, upload: { num: '9.38', unit: 'Gbps' } }]
+
+const warnings = {
+  warnings: [
+    { kind: 'battery', name: 'Thermostat Bad', detail: '8%', severity: 'warning' },
+    { kind: 'problem', name: 'Grünbeck', detail: 'Salzvorrat gering', severity: 'warning' },
+  ],
+}
+
 describe('buildScreenSvg', () => {
   it('renders clock, date, events and inverter values', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter })
@@ -84,8 +101,47 @@ describe('buildScreenSvg', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: emojiDays, inverter })
     // Must not contain lone surrogates (U+FFFD replacement character)
     expect(svg).not.toContain('�')
-    // Must contain truncated emoji plus ellipsis (33 emoji + '…')
-    expect(svg).toContain('🎉'.repeat(33) + '…')
+    // Must contain truncated emoji plus ellipsis (31 emoji + '…', limit 32)
+    expect(svg).toContain('🎉'.repeat(31) + '…')
+  })
+
+  it('renders home people in solid black and away people in the grey pattern', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, presence })
+    // home names in a plain text element (no grey fill)
+    const homeLine = svg.match(/<text[^>]*>Philipp, Anna<\/text>/)
+    expect(homeLine).not.toBeNull()
+    expect(homeLine[0]).not.toContain('url(#grey)')
+    // away name in a grey-filled text element
+    expect(svg).toMatch(/<text[^>]*fill="url\(#grey\)"[^>]*>Max<\/text>/)
+  })
+
+  it('renders speedtest download and upload values', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, speedtest })
+    expect(svg).toContain('9.45 Gbps')
+    expect(svg).toContain('9.38 Gbps')
+  })
+
+  it('shows the warnings overlay only when warnings exist', () => {
+    const without = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings: { warnings: [] } })
+    expect(without).not.toContain('Hinweise')
+
+    const withWarn = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings })
+    expect(withWarn).toContain('Hinweise')
+    expect(withWarn).toContain('Akku: Thermostat Bad 8%')
+    expect(withWarn).toContain('Fehler: Grünbeck Salzvorrat gering')
+  })
+
+  it('collapses extra warnings into a "+N weitere" line', () => {
+    const many = { warnings: Array.from({ length: 6 }, (_, i) => ({ kind: 'battery', name: 'Sensor ' + i, detail: '5%' })) }
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings: many })
+    expect(svg).toContain('+ 3 weitere')
+  })
+
+  it('renders the battery as text with no progress bar', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
+    expect(svg).toContain('49 %')
+    // the old SOC bar used a filled rect of height 12 — it must be gone
+    expect(svg).not.toMatch(/<rect[^>]*height="12"/)
   })
 
   it('keeps every drawn element within the 800x480 canvas', () => {
@@ -99,7 +155,8 @@ describe('buildScreenSvg', () => {
         name: 'Cal',
       })),
     }))
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter })
+    const many = { warnings: Array.from({ length: 6 }, (_, i) => ({ kind: 'battery', name: 'Sensor ' + i, detail: '5%' })) }
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter, presence, speedtest, warnings: many })
 
     const textYs = [...svg.matchAll(/<text[^>]*\by="(-?\d+(?:\.\d+)?)"/g)].map((m) => Number(m[1]))
     expect(textYs.length).toBeGreaterThan(0)
