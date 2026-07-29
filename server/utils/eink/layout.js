@@ -14,6 +14,9 @@
 const W = 800
 const H = 480
 
+const MARGIN = 24 // content edge inset on every side
+const BOTTOM = H - 8 // lowest content baseline — one shared bottom edge margin
+
 // Column split: calendar left of the divider, sections right of it. The divider
 // sits at the horizontal centre of the content area (margins 24..776); the right
 // column runs from RX to the right margin.
@@ -38,6 +41,18 @@ const FS = {
   warnTitle: 16,
   warn: 16,
 }
+
+// Header geometry (everything above the divider at HEADER_LINE_Y).
+const HEADER_LINE_Y = 88
+const CLOCK_BASE = 68 // clock baseline; also the date baseline when it stands alone
+const HDR_DATE_Y = 40 // date, stacked above the people row
+const HDR_PEOPLE_Y = 70 // people row
+const WX_SIZE = 72 // full header-height weather icon
+const WX_X = W - MARGIN - WX_SIZE // icon pinned to the right margin
+const WX_TOP = 8
+const WX_TEMP_X = WX_X - 12 // stacked high/low temps, right-anchored left of the icon
+const WX_BLOCK_LEFT = 636 // approx left edge of the weather block, for centring the date
+const CLOCK_RIGHT = 210 // approx right edge of the clock, for centring the date
 
 // url() reference to the halftone pattern defined in <defs>. 1 black px per 2x2
 // tile ≈ 25% coverage → light grey.
@@ -141,19 +156,24 @@ function weatherIcon(code, x, top, size) {
   const night = String(code || '').endsWith('n')
   const cloud = '<g fill="black"><circle cx="9" cy="14" r="4"/><circle cx="15.5" cy="14" r="4.6"/>'
     + '<circle cx="12" cy="10.8" r="4.8"/><rect x="8.5" y="13.6" width="10" height="5.2"/></g>'
+  // crescent: black disc with a white disc offset to carve the moon shape
+  const moon = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="black"/><circle cx="${cx + r * 0.42}" cy="${cy - r * 0.34}" r="${r * 0.86}" fill="white"/>`
   const rain = '<g stroke="black" stroke-width="1.7" stroke-linecap="round">'
     + '<line x1="9" y1="19.5" x2="7.8" y2="23"/><line x1="12.5" y1="19.5" x2="11.3" y2="23"/>'
     + '<line x1="16" y1="19.5" x2="14.8" y2="23"/></g>'
   switch (kind) {
     case '01':
       return night
-        ? g('<circle cx="12" cy="12" r="6.5" fill="black"/><circle cx="14.6" cy="9.8" r="5.6" fill="white"/>')
+        ? g(moon(12, 12, 6.5))
         : g(`${sunRays(12, 12, 5)}<circle cx="12" cy="12" r="5" fill="black"/>`)
     case '02':
-      return g(`${sunRays(8, 8, 3.3)}<circle cx="8" cy="8" r="3.3" fill="black"/>${cloud}`)
+      // sun (day) or moon (night) peeking behind the cloud
+      return night
+        ? g(`${moon(7.5, 7.5, 3.6)}${cloud}`)
+        : g(`${sunRays(8, 8, 3.3)}<circle cx="8" cy="8" r="3.3" fill="black"/>${cloud}`)
     case '03':
     case '04':
-      return g(cloud)
+      return night ? g(`${moon(7.5, 7, 3)}${cloud}`) : g(cloud)
     case '09':
     case '10':
       return g(cloud + rain)
@@ -181,7 +201,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   // weather (full-height icon, with today's high above the low to its left)
   // pinned to the far corner. Home people solid black, away people halftone grey
   // (one centred text, a tspan per name, so mixed fills share a line).
-  parts.push(`<text x="24" y="68" font-size="${FS.clock}" font-weight="bold">${escapeXml(time)}</text>`)
+  parts.push(`<text x="${MARGIN}" y="${CLOCK_BASE}" font-size="${FS.clock}" font-weight="bold">${escapeXml(time)}</text>`)
 
   const persons = (presence && presence.persons) || []
   const peopleSpans = persons
@@ -195,26 +215,28 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const today = weather && weather.daily && weather.daily[0]
   const cur = weather && weather.current && weather.current.weather && weather.current.weather[0]
   const code = cur ? cur.icon : today && today.weather && today.weather[0] ? today.weather[0].icon : null
-  const hasWeather = code && today && today.temperature
+  const tmax = today && today.temperature ? Number(today.temperature.max) : NaN
+  const tmin = today && today.temperature ? Number(today.temperature.min) : NaN
+  // only show the weather block when we have both an icon and finite temps —
+  // a malformed OWM daily entry must never render "NaN°"
+  const hasWeather = Boolean(code) && Number.isFinite(tmax) && Number.isFinite(tmin)
 
   if (hasWeather) {
     // full-height icon in the corner; today's high on top, low below, to its left
-    parts.push(weatherIcon(code, 704, 8, 72))
-    const tmax = Math.round(Number(today.temperature.max))
-    const tmin = Math.round(Number(today.temperature.min))
-    parts.push(`<text x="692" y="42" font-size="24" text-anchor="end">${tmax}°</text>`)
-    parts.push(`<text x="692" y="72" font-size="24" text-anchor="end">${tmin}°</text>`)
+    parts.push(weatherIcon(code, WX_X, WX_TOP, WX_SIZE))
+    parts.push(`<text x="${WX_TEMP_X}" y="${HDR_DATE_Y + 2}" font-size="24" text-anchor="end">${Math.round(tmax)}°</text>`)
+    parts.push(`<text x="${WX_TEMP_X}" y="${HDR_PEOPLE_Y + 2}" font-size="24" text-anchor="end">${Math.round(tmin)}°</text>`)
   }
 
   // centre the date/people block in the gap between the clock and the weather
-  const rightBound = hasWeather ? 640 : W - 24
-  const centerX = Math.round((210 + rightBound) / 2)
-  parts.push(`<text x="${centerX}" y="${persons.length ? 40 : 58}" font-size="${FS.date}" text-anchor="middle">${escapeXml(date)}</text>`)
+  const rightBound = hasWeather ? WX_BLOCK_LEFT : W - MARGIN
+  const centerX = Math.round((CLOCK_RIGHT + rightBound) / 2)
+  parts.push(`<text x="${centerX}" y="${persons.length ? HDR_DATE_Y : 58}" font-size="${FS.date}" text-anchor="middle">${escapeXml(date)}</text>`)
   if (persons.length) {
-    parts.push(`<text x="${centerX}" y="70" font-size="${FS.presence}" text-anchor="middle">${peopleSpans}</text>`)
+    parts.push(`<text x="${centerX}" y="${HDR_PEOPLE_Y}" font-size="${FS.presence}" text-anchor="middle">${peopleSpans}</text>`)
   }
 
-  parts.push(`<line x1="24" y1="88" x2="${W - 24}" y2="88" stroke="black" stroke-width="2"/>`)
+  parts.push(`<line x1="${MARGIN}" y1="${HEADER_LINE_Y}" x2="${W - MARGIN}" y2="${HEADER_LINE_Y}" stroke="black" stroke-width="2"/>`)
 
   // --- warnings overlay geometry (drawn last, but sized up front so the
   // calendar can stop above it) ---
@@ -223,13 +245,12 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const shownWarns = warnList.slice(0, 3)
   const warnLineCount = shownWarns.length + (warnList.length > 3 ? 1 : 0)
   const warnBoxH = 26 + warnLineCount * 22
-  const warnBottom = H - 32
+  const warnBottom = BOTTOM // same bottom edge margin as the calendar/divider
   const warnTop = warnBottom - warnBoxH
 
   // --- left column: calendar ---
-  // 8px bottom edge margin (no footer to leave room for); when warnings show,
-  // stop above the overlay box instead.
-  const calBottom = warnShown ? warnTop - 10 : H - 8
+  // shares the BOTTOM edge margin; when warnings show, stop above the box instead.
+  const calBottom = warnShown ? warnTop - 10 : BOTTOM
   let y = 122
   if (!days || days.length === 0) {
     parts.push(`<text x="24" y="${y}" font-size="${FS.event}">Keine Termine</text>`)
@@ -256,7 +277,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   }
 
   // column divider
-  parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${H - 8}" stroke="black" stroke-width="1"/>`)
+  parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${BOTTOM}" stroke="black" stroke-width="1"/>`)
 
   const rx = RX
   // Same rhythm as the calendar: header, HEADER_GAP, then rows spaced by ROW,
