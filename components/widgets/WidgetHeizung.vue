@@ -5,16 +5,9 @@
     <div class="metric-grid">
       <span class="metric-label">Status</span>
       <component :is="stateIcon" class="metric-icon" :style="{ color: stateColor }" />
-      <span class="metric-value" :style="{ color: stateColor }">{{ stateLabel }}</span>
-
-      <template v-if="roomActual !== null">
-        <span class="metric-label">Raum</span>
-        <span class="metric-icon"></span>
-        <span class="metric-value">
-          {{ fmt(roomActual)
-          }}<template v-if="roomTarget !== null"><span class="arrow"> → </span>{{ fmt(roomTarget) }}</template>
-        </span>
-      </template>
+      <span class="metric-value" :style="{ color: stateColor }">
+        {{ stateLabel }}<template v-if="state !== 'idle' && flow !== null"> {{ fmt(flow) }}</template>
+      </span>
 
       <template v-if="outdoor !== null">
         <span class="metric-label">Außen</span>
@@ -37,9 +30,8 @@ const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v)
 // '21.5°' — one decimal.
 const fmt = (v) => `${Number(v).toFixed(1)}°`
 
-const roomActual = computed(() => num(data.value?.room_actual))
-const roomTarget = computed(() => num(data.value?.room_target))
 const outdoor = computed(() => num(data.value?.outdoor))
+const flow = computed(() => num(data.value?.flow_temperature))
 
 const state = computed(() => {
   if (data.value?.is_cooling) return 'cooling'
@@ -53,9 +45,3 @@ const stateColor = computed(
 )
 const stateIcon = computed(() => ({ heating: FireFlame, cooling: SnowFlake, idle: Minus })[state.value])
 </script>
-
-<style scoped>
-.arrow {
-  color: rgba(255, 255, 255, 0.5);
-}
-</style>
