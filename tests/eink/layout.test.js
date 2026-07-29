@@ -75,6 +75,21 @@ describe('buildScreenSvg', () => {
     expect(svg).toMatch(/text-anchor="middle"[^>]*>Mittwoch<\/text>/)
   })
 
+  it('never renders NaN° for a malformed weather day', () => {
+    const bad = { current: { weather: [{ icon: '01d' }] }, daily: [{ temperature: { min: null, max: 'x' }, weather: [{ icon: '01d' }] }] }
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, weather: bad })
+    expect(svg).not.toContain('NaN')
+    expect(svg).not.toContain('class="wx"') // block hidden entirely
+  })
+
+  it('uses a night icon (moon) after dark', () => {
+    const nightWeather = { current: { weather: [{ icon: '01n' }] }, daily: [{ temperature: { min: 8, max: 15 }, weather: [{ icon: '01n' }] }] }
+    const svg = buildScreenSvg({ time: '23:00', date: 'Mittwoch', days, inverter, weather: nightWeather })
+    expect(svg).toContain('class="wx"')
+    // moon = a black disc with a white disc carved out; the sun's rays must be absent
+    expect(svg).not.toContain('stroke-linecap="round"')
+  })
+
   it('escapes XML special characters in event summaries', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
     expect(svg).toContain('Zoo &amp; Aquarium &lt;Besuch&gt;')

@@ -41,7 +41,22 @@ function loadFonts() {
   return fontsPromise
 }
 
+// Short frame cache. The firmware fetches the frame twice per refresh cycle
+// (once to draw, once via writeImageAgain to sync the controller's previous-frame
+// RAM); caching makes those two fetches byte-identical — removing the ghosting
+// that a minute-rollover between them would otherwise cause — and halves the
+// render work. The clock is at most FRAME_TTL_MS stale, invisible at a 60s panel
+// refresh. Bypassed in mock mode so dev previews always reflect live edits.
+const FRAME_TTL_MS = 15000
+let cachedFrame = null
+let cachedAt = 0
+
 export async function renderEinkFrame(event) {
+  const mock = isMockEnabled(event)
+  if (!mock && cachedFrame && Date.now() - cachedAt < FRAME_TTL_MS) {
+    return cachedFrame
+  }
+
   const config = useRuntimeConfig(event)
   const timezone = config.timezone || 'UTC'
   const now = dayjs().tz(timezone)
@@ -81,5 +96,10 @@ export async function renderEinkFrame(event) {
     },
   })
   const img = resvg.render()
-  return packRgbaTo1Bit(img.pixels, img.width, img.height)
+  const frame = packRgbaTo1Bit(img.pixels, img.width, img.height)
+  if (!mock) {
+    cachedFrame = frame
+    cachedAt = Date.now()
+  }
+  return frame
 }
