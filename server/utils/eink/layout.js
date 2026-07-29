@@ -54,8 +54,8 @@ const WX_TEMP_X = WX_X - 12 // stacked high/low temps, right-anchored left of th
 const WX_BLOCK_LEFT = 636 // approx left edge of the weather block, for centring the date
 const CLOCK_RIGHT = 210 // approx right edge of the clock, for centring the date
 
-// url() reference to the halftone pattern defined in <defs>. 1 black px per 2x2
-// tile ≈ 25% coverage → light grey.
+// url() reference to the halftone pattern defined in <defs>. 2x2 checkerboard
+// (50% coverage) → mid grey, darker than a light dither but not solid black.
 const GREY = 'url(#grey)'
 
 function escapeXml(s) {
@@ -192,9 +192,12 @@ function weatherIcon(code, x, top, size) {
 export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung, netatmo, weather }) {
   const parts = []
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans">`)
-  // Halftone pattern for "grey" text on the 1-bit panel: 1 black px per 2x2 tile.
+  // Halftone pattern for "grey" text on the 1-bit panel: a 2x2 checkerboard
+  // (2 black px per tile = 50% coverage) — darker than a 25% dither but still
+  // clearly distinct from solid-black home names.
   parts.push('<defs><pattern id="grey" width="2" height="2" patternUnits="userSpaceOnUse">'
-    + '<rect width="2" height="2" fill="white"/><rect width="1" height="1" fill="black"/></pattern></defs>')
+    + '<rect width="2" height="2" fill="white"/><rect width="1" height="1" fill="black"/>'
+    + '<rect x="1" y="1" width="1" height="1" fill="black"/></pattern></defs>')
   parts.push(`<rect width="${W}" height="${H}" fill="white"/>`)
 
   // header: clock left. Date + people centre-aligned as a stacked block; today's
