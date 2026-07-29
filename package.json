@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "dayjs": "^1.11.13",
     "iconoir-vue": "^7.11.0",
     "node-ical": "^0.26.1",
