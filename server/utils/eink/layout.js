@@ -93,6 +93,25 @@ function metricLine(x, y, prefix, value) {
   return `<text x="${x}" y="${y}" font-size="${FS.metric}">${escapeXml(prefix)} <tspan font-weight="bold">${escapeXml(value)}</tspan></text>`
 }
 
+// Special-event icons — drawn as solid black vector shapes in a 24-unit box so
+// they stay crisp when the frame is thresholded to 1 bit. Matches the big
+// dashboard's gift (birthday) / heart (anniversary) markers.
+function heartIcon(x, top, size) {
+  const s = size / 24
+  return `<path class="sp-heart" transform="translate(${x} ${top}) scale(${s})" fill="black" d="M12 21C12 21 3.5 14 3.5 8.7C3.5 5.8 5.8 4 8.2 4C10 4 11.4 5 12 6.3C12.6 5 14 4 15.8 4C18.2 4 20.5 5.8 20.5 8.7C20.5 14 12 21 12 21Z"/>`
+}
+function giftIcon(x, top, size) {
+  const s = size / 24
+  return (
+    `<g class="sp-gift" transform="translate(${x} ${top}) scale(${s})" fill="black">`
+    + '<circle cx="8.4" cy="5" r="2.7"/><circle cx="15.6" cy="5" r="2.7"/>'
+    + '<rect x="2.5" y="8" width="19" height="4.5"/>'
+    + '<rect x="4" y="12.5" width="16" height="9.5"/>'
+    + '<rect x="10.8" y="8" width="2.4" height="14" fill="white"/>'
+    + '</g>'
+  )
+}
+
 export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung }) {
   const parts = []
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans">`)
@@ -142,7 +161,15 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
       y += 28
       for (const e of day.events) {
         if (y > calBottom) break outer
-        parts.push(`<text x="34" y="${y}" font-size="${FS.event}">${escapeXml(eventLine(e))}</text>`)
+        const sp = e.special_event
+        if (sp) {
+          // Birthday → gift, anniversary → heart, then the name and (age/years).
+          parts.push(sp.type === 'anniversary' ? heartIcon(34, y - 15, 18) : giftIcon(34, y - 15, 18))
+          const label = sp.name + (sp.years != null ? ` (${sp.years})` : '')
+          parts.push(`<text x="60" y="${y}" font-size="${FS.event}">${escapeXml(truncate(label, 24))}</text>`)
+        } else {
+          parts.push(`<text x="34" y="${y}" font-size="${FS.event}">${escapeXml(eventLine(e))}</text>`)
+        }
         y += 27
       }
       y += 14
