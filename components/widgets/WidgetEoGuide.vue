@@ -11,21 +11,18 @@
       <span class="metric-icon"></span>
       <span class="metric-value">{{ monthly }}</span>
 
-      <span class="metric-label"></span>
-      <span class="metric-icon"></span>
-      <span class="metric-value rating-value">
-        <span class="stars">
-          <template v-for="(star, index) in starsArray" :key="index">
-            <span v-if="star.type === 'half'" class="half-star">
-              <Star class="outline" />
-              <StarSolid class="filled half-fill" />
-            </span>
-            <StarSolid v-else-if="star.type === 'full'" class="filled" />
-            <Star v-else class="outline" />
-          </template>
-        </span>
-        {{ overall_rating.toFixed(1) }}
+      <span class="metric-label stars" aria-label="Bewertung">
+        <template v-for="(star, index) in starsArray" :key="index">
+          <span v-if="star.type === 'half'" class="half-star">
+            <Star class="outline" />
+            <StarSolid class="filled half-fill" />
+          </span>
+          <StarSolid v-else-if="star.type === 'full'" class="filled" />
+          <Star v-else class="outline" />
+        </template>
       </span>
+      <span class="metric-icon"></span>
+      <span class="metric-value">{{ overall_rating.toFixed(1) }}</span>
     </div>
   </div>
 </template>
@@ -61,36 +58,32 @@ const starsArray = computed(() => {
 </script>
 
 <style scoped>
-/* The rating row (stars + score) is wider than the numbers, so the value column
-   is stretched. Right-align every value to the column edge so Jährlich/Monatlich
-   line up flush right with the rating instead of floating in the middle. */
+/* Right-align the numeric values to the column edge so Jährlich/Monatlich and
+   the rating score line up flush right. */
 .metric-value {
   justify-self: end;
 }
 
-/* Rating sits in the value cell: small stars followed by the numeric score. */
-.rating-value {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
+/* Stars sit in the LABEL column (like a label for the rating row); only the
+   numeric score goes in the value column, keeping that column narrow so all
+   three numbers line up tightly. */
 .stars {
   display: inline-flex;
   align-items: center;
   gap: 0.12rem;
+  justify-self: end;
 }
 
-.rating-value svg {
-  width: 0.9em;
-  height: 0.9em;
+.stars svg {
+  width: 1.05em;
+  height: 1.05em;
 }
 
-.rating-value .filled {
+.stars .filled {
   color: #fbbf24;
 }
 
-.rating-value .outline {
+.stars .outline {
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -98,8 +91,8 @@ const starsArray = computed(() => {
 .half-star {
   position: relative;
   display: inline-flex;
-  width: 0.9em;
-  height: 0.9em;
+  width: 1.05em;
+  height: 1.05em;
 }
 
 .half-star .half-fill {
