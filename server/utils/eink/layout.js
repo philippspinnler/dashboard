@@ -112,7 +112,7 @@ function giftIcon(x, top, size) {
   )
 }
 
-export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung }) {
+export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung, netatmo }) {
   const parts = []
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans">`)
   // Halftone pattern for "grey" text on the 1-bit panel: 1 black px per 2x2 tile.
@@ -201,15 +201,16 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
   parts.push(`<text x="${rx}" y="300" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
 
-  // --- right column: Heizung (status + inside/outside temp only) ---
+  // --- right column: Heizung — status from the heat pump, inside/outside
+  // temperatures from Netatmo ---
   parts.push(`<text x="${rx}" y="338" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
-  if (!heizung) {
+  if (!heizung && !netatmo) {
     parts.push(`<text x="${rx}" y="366" font-size="${FS.metric}">Keine Daten</text>`)
   } else {
-    const status = heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus'
+    const status = heizung ? (heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus') : '–'
     parts.push(metricLine(rx, 366, 'Status', status))
-    const inside = formatTemp(heizung.room_actual)
-    const outside = formatTemp(heizung.outdoor)
+    const inside = formatTemp(netatmo ? netatmo.indoor_temperature : null)
+    const outside = formatTemp(netatmo ? netatmo.outdoor_temperature : null)
     parts.push(`<text x="${rx}" y="394" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
   }
 

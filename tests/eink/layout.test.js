@@ -40,6 +40,8 @@ const warnings = {
 
 const heizung = { is_heating: true, is_cooling: false, room_actual: 22.5, room_target: 21.0, outdoor: 18.7 }
 
+const netatmo = { indoor_temperature: 21.5, indoor_co2: 650, outdoor_temperature: 14.2 }
+
 describe('buildScreenSvg', () => {
   it('renders clock, date, events and inverter values', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter })
@@ -165,16 +167,17 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('Hochzeitstag')
   })
 
-  it('renders heizung status and inside/outside temperatures only', () => {
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, heizung })
+  it('renders heizung status with inside/outside temps sourced from netatmo', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, heizung, netatmo })
     expect(svg).toContain('Heizung')
-    expect(svg).toContain('Heizt')
+    expect(svg).toContain('Heizt') // status from the heat pump
     expect(svg).toContain('Innen')
-    expect(svg).toContain('22,5°')
+    expect(svg).toContain('21,5°') // netatmo indoor_temperature
     expect(svg).toContain('Außen')
-    expect(svg).toContain('18,7°')
-    // the target temperature is intentionally not shown
-    expect(svg).not.toContain('21,0°')
+    expect(svg).toContain('14,2°') // netatmo outdoor_temperature
+    // temps must NOT come from the heizung entities anymore
+    expect(svg).not.toContain('22,5°') // heizung.room_actual
+    expect(svg).not.toContain('18,7°') // heizung.outdoor
   })
 
   it('shows the three heizung status states', () => {
@@ -205,7 +208,7 @@ describe('buildScreenSvg', () => {
       })),
     }))
     const many = { warnings: Array.from({ length: 6 }, (_, i) => ({ kind: 'battery', name: 'Sensor ' + i, detail: '5%' })) }
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter, presence, speedtest, warnings: many, heizung })
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter, presence, speedtest, warnings: many, heizung, netatmo })
 
     const textYs = [...svg.matchAll(/<text[^>]*\by="(-?\d+(?:\.\d+)?)"/g)].map((m) => Number(m[1]))
     expect(textYs.length).toBeGreaterThan(0)
