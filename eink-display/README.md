@@ -4,8 +4,9 @@ An ESP8266 + Waveshare 7.5" e-Paper panel showing a black-and-white
 subset of the dashboard: clock, today's weather (icon + low/high),
 calendar (with a gift/heart icon for birthdays and anniversaries), solar
 inverter, who's home
-(away people shown in a dithered "grey"), internet speed, and heat-pump
-status (Aus/Heizt/Kühlt + inside/outside temp) — plus a warnings box
+(away people shown in a dithered "grey"), internet speed, heat-pump
+status (Aus/Heizt/Kühlt + Vorlauf temp), and Netatmo inside/outside
+temperature — plus a warnings box
 that appears only when something needs attention. The
 screen is rendered **server-side** by the main app; the firmware just
 downloads `/api/eink/screen.bin` (800×480, 1 bit/pixel) every minute and

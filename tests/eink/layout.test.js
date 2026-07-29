@@ -38,7 +38,7 @@ const warnings = {
   ],
 }
 
-const heizung = { is_heating: true, is_cooling: false, room_actual: 22.5, room_target: 21.0, outdoor: 18.7 }
+const heizung = { is_heating: true, is_cooling: false, outdoor: 18.7, flow_temperature: 32.4 }
 
 const netatmo = { indoor_temperature: 21.5, indoor_co2: 650, outdoor_temperature: 14.2 }
 
@@ -204,26 +204,26 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('Hochzeitstag')
   })
 
-  it('renders heizung status with inside/outside temps sourced from netatmo', () => {
+  it('shows heizung status with the Vorlauf temp in parens, and Netatmo temps separately', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, heizung, netatmo })
-    expect(svg).toContain('Heizung')
-    expect(svg).toContain('Heizt') // status from the heat pump
+    // status carries the flow temperature in parentheses when active
+    expect(svg).toContain('Heizt (32,4°)')
+    // Netatmo is its own section with inside/outside from netatmo
+    expect(svg).toContain('Netatmo')
     expect(svg).toContain('Innen')
     expect(svg).toContain('21,5°') // netatmo indoor_temperature
     expect(svg).toContain('Außen')
     expect(svg).toContain('14,2°') // netatmo outdoor_temperature
-    // temps must NOT come from the heizung entities anymore
-    expect(svg).not.toContain('22,5°') // heizung.room_actual
-    expect(svg).not.toContain('18,7°') // heizung.outdoor
   })
 
-  it('shows the three heizung status states', () => {
-    const heat = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: true, is_cooling: false, room_actual: 22, outdoor: 18 } })
-    expect(heat).toContain('Heizt')
-    const cool = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: true, room_actual: 24, outdoor: 30 } })
-    expect(cool).toContain('Kühlt')
-    const off = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: false, room_actual: 21, outdoor: 5 } })
+  it('shows the three heizung status states; no flow parens when off', () => {
+    const heat = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: true, is_cooling: false, flow_temperature: 30 } })
+    expect(heat).toContain('Heizt (30,0°)')
+    const cool = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: true, flow_temperature: 12 } })
+    expect(cool).toContain('Kühlt (12,0°)')
+    const off = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: false, flow_temperature: 20 } })
     expect(off).toContain('Status <tspan font-weight="bold">Aus</tspan>')
+    expect(off).not.toContain('(20,0°)') // no flow temp shown when off
   })
 
   it('renders the battery as text with no progress bar', () => {

@@ -357,9 +357,8 @@ yours differ (e.g. HK2 instead of HK1). State is *cooling* if cooling, else
 | --- | --- |
 | `NUXT_HEIZUNG_IS_HEATING_ENTITY` | Binary sensor, currently heating |
 | `NUXT_HEIZUNG_IS_COOLING_ENTITY` | Binary sensor, currently cooling |
-| `NUXT_HEIZUNG_ROOM_ACTUAL_ENTITY` | Measured room temperature |
-| `NUXT_HEIZUNG_ROOM_TARGET_ENTITY` | Comfort target temperature |
 | `NUXT_HEIZUNG_OUTDOOR_ENTITY` | Outdoor temperature |
+| `NUXT_HEIZUNG_FLOW_TEMPERATURE_ENTITY` | Vorlauf (water flowing to the floor) temperature |
 
 </details>
 
@@ -514,7 +513,7 @@ eink-display/           # PlatformIO firmware for the e-ink companion — see ei
 
 ## 🪶 E-ink companion
 
-A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, and heat-pump status in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). The display is rendered server-side and served as a 1-bit image frame:
+A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, heat-pump status, and Netatmo temperatures in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). The display is rendered server-side and served as a 1-bit image frame:
 
 | Endpoint | Purpose |
 | --- | --- |

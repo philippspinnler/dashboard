@@ -317,19 +317,31 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   ry += ROW
   ry += BLOCK_GAP
 
-  // --- right column: Heizung — status from the heat pump, inside/outside
-  // temperatures from Netatmo ---
+  // --- right column: Heizung — heat-pump status; when heating/cooling, the
+  // Vorlauf (water flowing to the floor) temperature follows in parentheses ---
   parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
   ry += HEADER_GAP
-  if (!heizung && !netatmo) {
+  if (!heizung) {
     parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
     ry += ROW
   } else {
-    const status = heizung ? (heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus') : '–'
-    parts.push(metricLine(rx, ry, 'Status', status))
+    const state = heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus'
+    const flow = heizung.flow_temperature
+    const value = state !== 'Aus' && flow != null ? `${state} (${formatTemp(flow)})` : state
+    parts.push(metricLine(rx, ry, 'Status', value))
     ry += ROW
-    const inside = formatTemp(netatmo ? netatmo.indoor_temperature : null)
-    const outside = formatTemp(netatmo ? netatmo.outdoor_temperature : null)
+  }
+  ry += BLOCK_GAP
+
+  // --- right column: Netatmo (inside/outside temperature) ---
+  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Netatmo</text>`)
+  ry += HEADER_GAP
+  if (!netatmo) {
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
+    ry += ROW
+  } else {
+    const inside = formatTemp(netatmo.indoor_temperature)
+    const outside = formatTemp(netatmo.outdoor_temperature)
     parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
     ry += ROW
   }
