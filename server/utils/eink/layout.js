@@ -279,23 +279,34 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     }
   }
 
-  // column divider
-  parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${BOTTOM}" stroke="black" stroke-width="1"/>`)
-
+  // --- right column ---
+  // Each section only renders when its data source is actually present, so the
+  // panel adapts to a setup without an inverter / heat pump / Netatmo / etc.
+  // A running ry means hidden sections simply reflow the rest upward. The zero /
+  // null checks distinguish "no source" from a genuine 0 or "off" reading.
   const rx = RX
-  // Same rhythm as the calendar: header, HEADER_GAP, then rows spaced by ROW,
-  // BLOCK_GAP between sections.
+  const speed = (speedtest && speedtest[0]) || null
+  const hasInverter =
+    inverter &&
+    [inverter.pv_power, inverter.power_consumption, inverter.grid_consumption, inverter.grid_feedin, inverter.battery_state_of_charge].some(
+      (v) => Number(v),
+    )
+  const hasSpeed = Boolean(speed && speed.download)
+  const hasHeizung = Boolean(heizung)
+  const hasNetatmo = netatmo && (netatmo.indoor_temperature != null || netatmo.outdoor_temperature != null)
+  const anyRight = hasInverter || hasSpeed || hasHeizung || hasNetatmo
+
+  if (anyRight) {
+    parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${BOTTOM}" stroke="black" stroke-width="1"/>`)
+  }
+
   let ry = 124
 
-  // --- right column: Energie (inverter, no bar) ---
-  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Energie</text>`)
-  ry += HEADER_GAP
-  if (!inverter) {
-    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
-    ry += ROW
-  } else {
+  if (hasInverter) {
     const grid = gridCompact(inverter)
     const bat = batteryCompact(inverter)
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Energie</text>`)
+    ry += HEADER_GAP
     parts.push(metricLine(rx, ry, 'PV', formatWatts(inverter.pv_power)))
     ry += ROW
     parts.push(metricLine(rx, ry, 'Verbrauch', formatWatts(inverter.power_consumption)))
@@ -303,47 +314,36 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     parts.push(metricLine(rx, ry, grid[0], grid[1]))
     ry += ROW
     parts.push(metricLine(rx, ry, bat[0], bat[1]))
-    ry += ROW
+    ry += ROW + BLOCK_GAP
   }
-  ry += BLOCK_GAP
 
-  // --- right column: Internet (speedtest) — down + up on one line ---
-  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Internet</text>`)
-  ry += HEADER_GAP
-  const speed = (speedtest && speedtest[0]) || null
-  const down = speed && speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
-  const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
-  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
-  ry += ROW
-  ry += BLOCK_GAP
+  if (hasSpeed) {
+    const down = speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
+    const up = speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Internet</text>`)
+    ry += HEADER_GAP
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
+    ry += ROW + BLOCK_GAP
+  }
 
-  // --- right column: Heizung — heat-pump status; when heating/cooling, the
-  // Vorlauf (water flowing to the floor) temperature follows in parentheses ---
-  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
-  ry += HEADER_GAP
-  if (!heizung) {
-    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
-    ry += ROW
-  } else {
+  if (hasHeizung) {
     const state = heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus'
     const flow = heizung.flow_temperature
+    // status carries the Vorlauf temp in parens when active
     const value = state !== 'Aus' && flow != null ? `${state} (${formatTemp(flow)})` : state
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
+    ry += HEADER_GAP
     parts.push(metricLine(rx, ry, 'Status', value))
-    ry += ROW
+    ry += ROW + BLOCK_GAP
   }
-  ry += BLOCK_GAP
 
-  // --- right column: Netatmo (inside/outside temperature) ---
-  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Netatmo</text>`)
-  ry += HEADER_GAP
-  if (!netatmo) {
-    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
-    ry += ROW
-  } else {
+  if (hasNetatmo) {
     const inside = formatTemp(netatmo.indoor_temperature)
     const outside = formatTemp(netatmo.outdoor_temperature)
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Netatmo</text>`)
+    ry += HEADER_GAP
     parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
-    ry += ROW
+    ry += ROW + BLOCK_GAP
   }
 
   // --- warnings overlay (only when something is actually wrong) ---

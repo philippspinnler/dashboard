@@ -48,6 +48,10 @@ mapping is fixed by the board (CS 15, DC 4, RST 2, BUSY 5).
   consecutive failures a small "offline" badge appears top-right.
 - Layout changes are server-side only (`server/utils/eink/layout.js`) —
   no reflashing needed.
+- Sections auto-hide: each right-column block (Energie, Internet, Heizung,
+  Netatmo) only appears when its data source is configured and present, so
+  the panel adapts to any setup — no heat pump, no solar inverter, etc.
+  just leaves that block out and reflows the rest up.
 
 ## Troubleshooting
 

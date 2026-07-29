@@ -96,10 +96,30 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('<Besuch>')
   })
 
-  it('renders fallbacks when data is unavailable', () => {
+  it('hides right-column sections (and the divider) when no data is available', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: null, inverter: null })
-    expect(svg).toContain('Keine Termine')
-    expect(svg).toContain('Keine Daten')
+    expect(svg).toContain('Keine Termine') // calendar keeps its own empty state
+    // right-column sections are omitted entirely — not shown as "Keine Daten"
+    expect(svg).not.toContain('Keine Daten')
+    expect(svg).not.toContain('Energie')
+    expect(svg).not.toContain('Internet')
+    expect(svg).not.toContain('Heizung')
+    expect(svg).not.toContain('Netatmo')
+    // the column divider is only drawn when the right column has content
+    expect(svg).not.toContain(`x1="400" y1="104"`)
+  })
+
+  it('auto-hides only the absent sections and reflows the rest', () => {
+    // inverter + netatmo present; no speedtest, no heat pump
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, netatmo })
+    expect(svg).toContain('Energie')
+    expect(svg).toContain('Netatmo')
+    expect(svg).not.toContain('Internet') // no speedtest passed
+    expect(svg).not.toContain('Heizung') // no heat pump passed
+    // Netatmo reflows up: as the 2nd visible section it sits far higher than the
+    // ~412 it would occupy as the 4th section
+    const netatmoY = Number(svg.match(/<text x="416" y="(\d+)"[^>]*>Netatmo<\/text>/)[1])
+    expect(netatmoY).toBeLessThan(300)
   })
 
   it('truncates a long event summary with a trailing ellipsis', () => {
