@@ -1,7 +1,8 @@
 # 🪶 E-ink display companion
 
 An ESP8266 + Waveshare 7.5" e-Paper panel showing a black-and-white
-subset of the dashboard: clock, calendar, solar inverter, who's home
+subset of the dashboard: clock, calendar (with a gift/heart icon for
+birthdays and anniversaries), solar inverter, who's home
 (away people shown in a dithered "grey"), internet speed, and heat-pump
 status (Aus/Heizt/Kühlt + inside/outside temp) — plus a warnings box
 that appears only when something needs attention. The

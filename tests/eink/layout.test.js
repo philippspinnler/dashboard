@@ -142,6 +142,29 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('+ 3 weitere')
   })
 
+  it('renders birthdays with a gift icon and anniversaries with a heart', () => {
+    const spDays = [
+      {
+        day: 'Heute',
+        date: '29. Juli',
+        events: [
+          { summary: 'Max 1990 Geburtstag', all_day: true, name: 'P', special_event: { type: 'birthday', name: 'Max', years: 35 } },
+          { summary: 'Anna & Tom 2010 Hochzeitstag', all_day: true, name: 'P', special_event: { type: 'anniversary', name: 'Anna & Tom', years: 15 } },
+          { summary: 'Babs Geburtstag', all_day: true, name: 'P', special_event: { type: 'birthday', name: 'Babs', years: null } },
+        ],
+      },
+    ]
+    const svg = buildScreenSvg({ time: '1', date: 'x', days: spDays, inverter })
+    expect(svg).toContain('sp-gift') // birthday icon
+    expect(svg).toContain('sp-heart') // anniversary icon
+    expect(svg).toContain('Max (35)')
+    expect(svg).toContain('Anna &amp; Tom (15)') // name escaped, years shown
+    expect(svg).toContain('>Babs<') // no "( )" when years is null
+    // the raw "Geburtstag/Hochzeitstag" summary text is replaced by the name
+    expect(svg).not.toContain('Geburtstag')
+    expect(svg).not.toContain('Hochzeitstag')
+  })
+
   it('renders heizung status and inside/outside temperatures only', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, heizung })
     expect(svg).toContain('Heizung')
