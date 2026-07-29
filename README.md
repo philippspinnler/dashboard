@@ -513,11 +513,27 @@ eink-display/           # PlatformIO firmware for the e-ink companion — see ei
 
 ## 🪶 E-ink companion
 
-A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, heat-pump status, and Netatmo temperatures in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). The display is rendered server-side and served as a 1-bit image frame:
+A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, heat-pump status, and Netatmo temperatures in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). Each data section auto-hides when its source isn't configured, so the panel adapts to any setup. The display is rendered server-side and served as a 1-bit image frame:
+
+<div align="center">
+  <img src="./docs/eink-companion.png" alt="E-ink companion screenshot" width="520">
+  <br>
+  <sub>The 800×480 1-bit frame (mock mode) — clock and today's weather up top, calendar on the left, the data column on the right.</sub>
+</div>
 
 | Endpoint | Purpose |
 | --- | --- |
 | `/api/eink/screen.bin` | Raw 48,000-byte 1-bit frame (800×480) for the e-ink companion's ESP8266 |
 | `/api/eink/screen.png` | Same frame as PNG, for browser preview |
 
-See [`eink-display/README.md`](./eink-display/README.md) for hardware and flashing instructions.
+### Flashing the ESP
+
+The firmware just downloads `screen.bin` every minute and streams it to the panel — all layout is server-side, so you rarely re-flash.
+
+1. Install [PlatformIO](https://platformio.org) (`brew install platformio`, or the VS Code extension).
+2. In `eink-display/`, copy `src/config.example.h` to `src/config.h` and fill in your WiFi credentials and the dashboard's base URL — plain HTTP on your LAN, e.g. `http://<host>:8201` (the ESP8266 can't do HTTPS, and only 2.4 GHz Wi-Fi).
+3. Connect the board via micro-USB (older revisions may need the CH340/CP210x USB-serial driver on macOS).
+4. Build and flash: `pio run -t upload` (add `--upload-port /dev/cu.usbserial-XXXX` if several ports show up).
+5. Watch it boot: `pio device monitor` — you should see WiFi connect, then `frame 1 drawn (full refresh)`.
+
+See [`eink-display/README.md`](./eink-display/README.md) for the hardware wiring and troubleshooting.
