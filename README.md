@@ -514,7 +514,7 @@ eink-display/           # PlatformIO firmware for the e-ink companion — see ei
 
 ## 🪶 E-ink companion
 
-A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, calendar, solar inverter, who's home, internet speed, and heat-pump status in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). The display is rendered server-side and served as a 1-bit image frame:
+A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, and heat-pump status in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). The display is rendered server-side and served as a 1-bit image frame:
 
 | Endpoint | Purpose |
 | --- | --- |

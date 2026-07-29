@@ -42,6 +42,11 @@ const heizung = { is_heating: true, is_cooling: false, room_actual: 22.5, room_t
 
 const netatmo = { indoor_temperature: 21.5, indoor_co2: 650, outdoor_temperature: 14.2 }
 
+const weather = {
+  current: { temperature: 18.5, weather: [{ id: 801, icon: '02d', description: 'Few Clouds' }] },
+  daily: [{ date: '2026-07-29T00:00:00.000Z', temperature: { min: 12.3, max: 19.8 }, weather: [{ id: 800, icon: '01d' }] }],
+}
+
 describe('buildScreenSvg', () => {
   it('renders clock, date, events and inverter values', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter })
@@ -51,6 +56,20 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('Einspeisung')
     expect(svg).toContain('49 %')
     expect(svg).toMatch(/^<svg[^>]*width="800" height="480"/)
+  })
+
+  it("shows today's weather icon and min/max in the top-right, date shifted left", () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter, weather })
+    expect(svg).toContain('class="wx"') // weather icon present
+    expect(svg).toContain('12° 20°') // today's rounded min/max (12.3 -> 12, 19.8 -> 20)
+    // date is right-anchored left of the corner, not at the far margin
+    expect(svg).toMatch(/<text x="636"[^>]*text-anchor="end"[^>]*>Mittwoch, 29\. Juli<\/text>/)
+  })
+
+  it('keeps the date in the corner when weather is unavailable', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
+    expect(svg).not.toContain('class="wx"')
+    expect(svg).toMatch(/<text x="776" y="68"[^>]*text-anchor="end"[^>]*>Mittwoch<\/text>/)
   })
 
   it('escapes XML special characters in event summaries', () => {
