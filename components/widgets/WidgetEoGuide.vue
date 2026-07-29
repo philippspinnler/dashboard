@@ -11,7 +11,7 @@
       <span class="metric-icon"></span>
       <span class="metric-value">{{ monthly }}</span>
 
-      <span class="metric-label">Bewertung</span>
+      <span class="metric-label"></span>
       <span class="metric-icon"></span>
       <span class="metric-value rating-value">
         <span class="stars">
@@ -61,6 +61,13 @@ const starsArray = computed(() => {
 </script>
 
 <style scoped>
+/* The rating row (stars + score) is wider than the numbers, so the value column
+   is stretched. Right-align every value to the column edge so Jährlich/Monatlich
+   line up flush right with the rating instead of floating in the middle. */
+.metric-value {
+  justify-self: end;
+}
+
 /* Rating sits in the value cell: small stars followed by the numeric score. */
 .rating-value {
   display: inline-flex;
