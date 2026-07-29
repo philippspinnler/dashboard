@@ -45,6 +45,7 @@ corner overlays.
   - [Photo background](#photo-background)
 - [🧪 Mock mode](#-mock-mode)
 - [🗂️ Project structure](#️-project-structure)
+- [🪶 E-ink companion](./eink-display/README.md)
 
 ---
 
@@ -82,6 +83,10 @@ Not part of the grid — they appear over the background only when relevant.
 
 🖼️ **Photo background** — a slowly rotating slideshow from an Immich or iCloud
 shared album.
+
+🪶 **E-ink companion** — an ESP8266 + Waveshare 7.5" e-Paper panel showing a
+black-and-white subset of the dashboard on a second, always-on screen. See
+[`eink-display/README.md`](./eink-display/README.md).
 
 ---
 
@@ -495,8 +500,17 @@ components/
 composables/            # client-side data polling & overlay positioning helpers
 server/
   api/                  # one Nitro route per data source (cached, same-origin)
+    eink/               # /api/eink/screen.bin + /api/eink/screen.png (see below)
   mocks/                # mock payloads served when NUXT_PUBLIC_USE_MOCK_DATA=true
   utils/                # Home Assistant REST helpers, caching, config parsing
+    eink/               # layout + rendering for the e-ink companion (screen.bin/screen.png)
+  assets/fonts/         # fonts used by the e-ink renderer
 nuxt.config.ts          # runtimeConfig — the full list of settings & defaults
 .env.example            # copy to .env; documents every variable
+eink-display/           # PlatformIO firmware for the e-ink companion — see eink-display/README.md
 ```
+
+| Endpoint | Purpose |
+| --- | --- |
+| `/api/eink/screen.bin` | Raw 48,000-byte 1-bit frame (800×480) for the e-ink companion's ESP8266 |
+| `/api/eink/screen.png` | Same frame as PNG, for browser preview |
