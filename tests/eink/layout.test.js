@@ -38,6 +38,8 @@ const warnings = {
   ],
 }
 
+const heizung = { is_heating: true, is_cooling: false, room_actual: 22.5, room_target: 21.0, outdoor: 18.7 }
+
 describe('buildScreenSvg', () => {
   it('renders clock, date, events and inverter values', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter })
@@ -140,6 +142,27 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('+ 3 weitere')
   })
 
+  it('renders heizung status and inside/outside temperatures only', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, heizung })
+    expect(svg).toContain('Heizung')
+    expect(svg).toContain('Heizt')
+    expect(svg).toContain('Innen')
+    expect(svg).toContain('22,5°')
+    expect(svg).toContain('Außen')
+    expect(svg).toContain('18,7°')
+    // the target temperature is intentionally not shown
+    expect(svg).not.toContain('21,0°')
+  })
+
+  it('shows the three heizung status states', () => {
+    const heat = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: true, is_cooling: false, room_actual: 22, outdoor: 18 } })
+    expect(heat).toContain('Heizt')
+    const cool = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: true, room_actual: 24, outdoor: 30 } })
+    expect(cool).toContain('Kühlt')
+    const off = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: false, room_actual: 21, outdoor: 5 } })
+    expect(off).toContain('Status <tspan font-weight="bold">Aus</tspan>')
+  })
+
   it('renders the battery as text with no progress bar', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
     expect(svg).toContain('49 %')
@@ -159,7 +182,7 @@ describe('buildScreenSvg', () => {
       })),
     }))
     const many = { warnings: Array.from({ length: 6 }, (_, i) => ({ kind: 'battery', name: 'Sensor ' + i, detail: '5%' })) }
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter, presence, speedtest, warnings: many })
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter, presence, speedtest, warnings: many, heizung })
 
     const textYs = [...svg.matchAll(/<text[^>]*\by="(-?\d+(?:\.\d+)?)"/g)].map((m) => Number(m[1]))
     expect(textYs.length).toBeGreaterThan(0)
