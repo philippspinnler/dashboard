@@ -58,7 +58,7 @@ export function buildScreenSvg({ time, date, days, inverter }) {
   } else {
     outer: for (const day of days) {
       if (y > H - 60) break
-      parts.push(`<text x="24" y="${y}" font-size="24" font-weight="bold">${escapeXml(day.day + ' · ' + day.date)}</text>`)
+      parts.push(`<text x="24" y="${y}" font-size="24" font-weight="bold">${escapeXml(truncate(day.day + ' · ' + day.date, 30))}</text>`)
       y += 36
       for (const e of day.events) {
         if (y > H - 30) break outer
@@ -88,11 +88,11 @@ export function buildScreenSvg({ time, date, days, inverter }) {
     for (const [label, value] of rows) {
       parts.push(`<text x="${rx}" y="${ry}" font-size="18">${escapeXml(label)}</text>`)
       parts.push(`<text x="${rx}" y="${ry + 34}" font-size="30" font-weight="bold">${escapeXml(value)}</text>`)
-      ry += 72
+      ry += 62
     }
     const soc = Math.max(0, Math.min(100, Number(inverter.battery_state_of_charge) || 0))
-    parts.push(`<rect x="${rx}" y="${ry - 10}" width="200" height="18" fill="white" stroke="black" stroke-width="2"/>`)
-    parts.push(`<rect x="${rx + 2}" y="${ry - 8}" width="${(196 * soc) / 100}" height="14" fill="black"/>`)
+    parts.push(`<rect x="${rx}" y="446" width="120" height="16" fill="white" stroke="black" stroke-width="2"/>`)
+    parts.push(`<rect x="${rx + 2}" y="448" width="${(116 * soc) / 100}" height="12" fill="black"/>`)
   }
 
   // footer: last-updated stamp

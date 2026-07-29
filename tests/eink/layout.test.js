@@ -43,4 +43,63 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('Keine Termine')
     expect(svg).toContain('Keine Daten')
   })
+
+  it('truncates a long event summary with a trailing ellipsis', () => {
+    const longSummary = 'This is a very long event summary that exceeds the limit'
+    const longDays = [
+      {
+        day: 'Heute',
+        date: '29. Juli',
+        events: [{ summary: longSummary, start_time: '09:00', all_day: false, name: 'Work' }],
+      },
+    ]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: longDays, inverter })
+    expect(svg).not.toContain(longSummary)
+    expect(svg).toContain('…')
+  })
+
+  it('truncates a long day header', () => {
+    const longDays = [
+      {
+        day: 'Ein sehr langer Wochentagname der die Grenze sprengt',
+        date: '29. Juli',
+        events: [],
+      },
+    ]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: longDays, inverter })
+    const fullHeader = longDays[0].day + ' · ' + longDays[0].date
+    expect(svg).not.toContain(fullHeader)
+    expect(svg).toContain('…')
+  })
+
+  it('keeps every drawn element within the 800x480 canvas', () => {
+    const bigDays = Array.from({ length: 8 }, (_, i) => ({
+      day: 'Tag ' + i,
+      date: '2' + i + '. Juli',
+      events: Array.from({ length: 6 }, (_, j) => ({
+        summary: 'Event number ' + i + '-' + j + ' with a fairly long description',
+        start_time: '0' + j + ':00',
+        all_day: j % 2 === 0,
+        name: 'Cal',
+      })),
+    }))
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days: bigDays, inverter })
+
+    const textYs = [...svg.matchAll(/<text[^>]*\by="(-?\d+(?:\.\d+)?)"/g)].map((m) => Number(m[1]))
+    expect(textYs.length).toBeGreaterThan(0)
+    for (const y of textYs) {
+      expect(y).toBeLessThanOrEqual(480)
+    }
+
+    const rectMatches = [...svg.matchAll(/<rect[^>]*\/>/g)]
+    expect(rectMatches.length).toBeGreaterThan(0)
+    for (const rect of rectMatches) {
+      const tag = rect[0]
+      const yMatch = tag.match(/\by="(-?\d+(?:\.\d+)?)"/)
+      const heightMatch = tag.match(/\bheight="(-?\d+(?:\.\d+)?)"/)
+      const y = yMatch ? Number(yMatch[1]) : 0
+      const height = Number(heightMatch[1])
+      expect(y + height).toBeLessThanOrEqual(480)
+    }
+  })
 })
