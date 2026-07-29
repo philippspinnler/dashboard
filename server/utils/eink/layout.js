@@ -74,9 +74,23 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     + '<rect width="2" height="2" fill="white"/><rect width="1" height="1" fill="black"/></pattern></defs>')
   parts.push(`<rect width="${W}" height="${H}" fill="white"/>`)
 
-  // header: clock left, date right
+  // header: clock left; presence row + date stacked top-right
   parts.push(`<text x="24" y="66" font-size="60" font-weight="bold">${escapeXml(time)}</text>`)
-  parts.push(`<text x="${W - 24}" y="60" font-size="22" text-anchor="end">${escapeXml(date)}</text>`)
+  // presence: names in a row, right-aligned above the date, no label. Home people
+  // in solid black, away people in the halftone "grey" — one right-anchored text
+  // with a tspan per name so mixed fills stay on a single line.
+  const persons = (presence && presence.persons) || []
+  if (persons.length) {
+    const spans = persons
+      .map((p, i) => {
+        const sep = i > 0 ? '   ' : ''
+        const fill = p.state === 'home' ? '' : ` fill="${GREY}"`
+        return `<tspan${fill}>${escapeXml(sep + p.name)}</tspan>`
+      })
+      .join('')
+    parts.push(`<text x="${W - 24}" y="34" font-size="18" text-anchor="end">${spans}</text>`)
+  }
+  parts.push(`<text x="${W - 24}" y="66" font-size="22" text-anchor="end">${escapeXml(date)}</text>`)
   parts.push(`<line x1="24" y1="84" x2="${W - 24}" y2="84" stroke="black" stroke-width="2"/>`)
 
   // --- warnings overlay geometry (drawn last, but sized up front so the
@@ -113,36 +127,26 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
 
   const rx = 514
 
-  // --- right column: Zuhause (presence) ---
-  parts.push(`<text x="${rx}" y="122" font-size="16" font-weight="bold">Zuhause</text>`)
-  const persons = (presence && presence.persons) || []
-  const home = persons.filter((p) => p.state === 'home').map((p) => p.name)
-  const away = persons.filter((p) => p.state !== 'home').map((p) => p.name)
-  parts.push(`<text x="${rx}" y="146" font-size="17">${escapeXml(home.length ? truncate(home.join(', '), 26) : '—')}</text>`)
-  if (away.length) {
-    parts.push(`<text x="${rx}" y="170" font-size="17" fill="${GREY}">${escapeXml(truncate(away.join(', '), 26))}</text>`)
-  }
-
   // --- right column: Energie (inverter, no bar) ---
-  parts.push(`<text x="${rx}" y="210" font-size="16" font-weight="bold">Energie</text>`)
+  parts.push(`<text x="${rx}" y="128" font-size="16" font-weight="bold">Energie</text>`)
   if (!inverter) {
-    parts.push(`<text x="${rx}" y="236" font-size="16">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="156" font-size="16">Keine Daten</text>`)
   } else {
     const grid = gridCompact(inverter)
     const bat = batteryCompact(inverter)
-    parts.push(metricLine(rx, 236, 'PV', formatWatts(inverter.pv_power)))
-    parts.push(metricLine(rx, 262, 'Verbrauch', formatWatts(inverter.power_consumption)))
-    parts.push(metricLine(rx, 288, grid[0], grid[1]))
-    parts.push(metricLine(rx, 314, bat[0], bat[1]))
+    parts.push(metricLine(rx, 158, 'PV', formatWatts(inverter.pv_power)))
+    parts.push(metricLine(rx, 186, 'Verbrauch', formatWatts(inverter.power_consumption)))
+    parts.push(metricLine(rx, 214, grid[0], grid[1]))
+    parts.push(metricLine(rx, 242, bat[0], bat[1]))
   }
 
   // --- right column: Internet (speedtest) ---
-  parts.push(`<text x="${rx}" y="350" font-size="16" font-weight="bold">Internet</text>`)
+  parts.push(`<text x="${rx}" y="298" font-size="16" font-weight="bold">Internet</text>`)
   const speed = (speedtest && speedtest[0]) || null
   const down = speed && speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
   const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
-  parts.push(metricLine(rx, 376, '↓', down))
-  parts.push(metricLine(rx, 402, '↑', up))
+  parts.push(metricLine(rx, 328, '↓', down))
+  parts.push(metricLine(rx, 356, '↑', up))
 
   // footer: last-updated stamp
   parts.push(`<text x="${W - 24}" y="${H - 14}" font-size="14" text-anchor="end">Stand ${escapeXml(time)}</text>`)
