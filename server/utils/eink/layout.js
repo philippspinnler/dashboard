@@ -250,7 +250,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   }
 
   // column divider
-  parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${H - 44}" stroke="black" stroke-width="1"/>`)
+  parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${H - 8}" stroke="black" stroke-width="1"/>`)
 
   const rx = RX
 
