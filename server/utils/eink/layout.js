@@ -171,38 +171,43 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     + '<rect width="2" height="2" fill="white"/><rect width="1" height="1" fill="black"/></pattern></defs>')
   parts.push(`<rect width="${W}" height="${H}" fill="white"/>`)
 
-  // header: clock left; presence row + date stacked top-right
+  // header: clock left. Date + people centre-aligned as a stacked block; today's
+  // weather (full-height icon, with today's high above the low to its left)
+  // pinned to the far corner. Home people solid black, away people halftone grey
+  // (one centred text, a tspan per name, so mixed fills share a line).
   parts.push(`<text x="24" y="68" font-size="${FS.clock}" font-weight="bold">${escapeXml(time)}</text>`)
-  // presence: names in a row, right-aligned above the date, no label. Home people
-  // in solid black, away people in the halftone "grey" — one right-anchored text
-  // with a tspan per name so mixed fills stay on a single line.
+
   const persons = (presence && presence.persons) || []
-  if (persons.length) {
-    const spans = persons
-      .map((p, i) => {
-        const sep = i > 0 ? '   ' : ''
-        const fill = p.state === 'home' ? '' : ` fill="${GREY}"`
-        return `<tspan${fill}>${escapeXml(sep + p.name)}</tspan>`
-      })
-      .join('')
-    parts.push(`<text x="${W - 24}" y="34" font-size="${FS.presence}" text-anchor="end">${spans}</text>`)
-  }
-  // today's weather in the top-right corner (icon + low/high); the date shifts
-  // left to make room. Icon uses the CURRENT conditions; temps are today's
-  // forecast min/max.
+  const peopleSpans = persons
+    .map((p, i) => {
+      const sep = i > 0 ? '   ' : ''
+      const fill = p.state === 'home' ? '' : ` fill="${GREY}"`
+      return `<tspan${fill}>${escapeXml(sep + p.name)}</tspan>`
+    })
+    .join('')
+
   const today = weather && weather.daily && weather.daily[0]
   const cur = weather && weather.current && weather.current.weather && weather.current.weather[0]
   const code = cur ? cur.icon : today && today.weather && today.weather[0] ? today.weather[0].icon : null
   const hasWeather = code && today && today.temperature
+
   if (hasWeather) {
-    const tmin = Math.round(Number(today.temperature.min))
+    // full-height icon in the corner; today's high on top, low below, to its left
+    parts.push(weatherIcon(code, 704, 8, 72))
     const tmax = Math.round(Number(today.temperature.max))
-    parts.push(`<text x="636" y="68" font-size="${FS.date}" text-anchor="end">${escapeXml(date)}</text>`)
-    parts.push(weatherIcon(code, 650, 42, 26))
-    parts.push(`<text x="${W - 24}" y="68" font-size="${FS.date}" text-anchor="end">${tmin}° ${tmax}°</text>`)
-  } else {
-    parts.push(`<text x="${W - 24}" y="68" font-size="${FS.date}" text-anchor="end">${escapeXml(date)}</text>`)
+    const tmin = Math.round(Number(today.temperature.min))
+    parts.push(`<text x="692" y="42" font-size="24" text-anchor="end">${tmax}°</text>`)
+    parts.push(`<text x="692" y="72" font-size="24" text-anchor="end">${tmin}°</text>`)
   }
+
+  // centre the date/people block in the gap between the clock and the weather
+  const rightBound = hasWeather ? 640 : W - 24
+  const centerX = Math.round((210 + rightBound) / 2)
+  parts.push(`<text x="${centerX}" y="${persons.length ? 40 : 58}" font-size="${FS.date}" text-anchor="middle">${escapeXml(date)}</text>`)
+  if (persons.length) {
+    parts.push(`<text x="${centerX}" y="70" font-size="${FS.presence}" text-anchor="middle">${peopleSpans}</text>`)
+  }
+
   parts.push(`<line x1="24" y1="88" x2="${W - 24}" y2="88" stroke="black" stroke-width="2"/>`)
 
   // --- warnings overlay geometry (drawn last, but sized up front so the
