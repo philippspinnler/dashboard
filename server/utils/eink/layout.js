@@ -20,6 +20,12 @@ const H = 480
 const DIVIDER_X = 400
 const RX = 416
 
+// Vertical rhythm shared by the calendar (left) and the data column (right), so
+// both breathe the same. Block-to-block baseline distance is ROW + BLOCK_GAP.
+const HEADER_GAP = 28 // section/day header baseline → its first line
+const ROW = 27 // line → line within a block
+const BLOCK_GAP = 14 // extra gap after a block
+
 // Font sizes in one place — the readable/compact tradeoff lives here.
 const FS = {
   clock: 64,
@@ -231,7 +237,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     outer: for (const day of days) {
       if (y > calBottom - 44) break
       parts.push(`<text x="24" y="${y}" font-size="${FS.dayHeader}" font-weight="bold">${escapeXml(truncate(day.day + ' · ' + day.date, 30))}</text>`)
-      y += 28
+      y += HEADER_GAP
       for (const e of day.events) {
         if (y > calBottom) break outer
         const sp = e.special_event
@@ -243,9 +249,9 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
         } else {
           parts.push(`<text x="34" y="${y}" font-size="${FS.event}">${escapeXml(eventLine(e))}</text>`)
         }
-        y += 27
+        y += ROW
       }
-      y += 14
+      y += BLOCK_GAP
     }
   }
 
@@ -253,38 +259,55 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   parts.push(`<line x1="${DIVIDER_X}" y1="104" x2="${DIVIDER_X}" y2="${H - 8}" stroke="black" stroke-width="1"/>`)
 
   const rx = RX
+  // Same rhythm as the calendar: header, HEADER_GAP, then rows spaced by ROW,
+  // BLOCK_GAP between sections.
+  let ry = 124
 
   // --- right column: Energie (inverter, no bar) ---
-  parts.push(`<text x="${rx}" y="124" font-size="${FS.section}" font-weight="bold">Energie</text>`)
+  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Energie</text>`)
+  ry += HEADER_GAP
   if (!inverter) {
-    parts.push(`<text x="${rx}" y="152" font-size="${FS.metric}">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
+    ry += ROW
   } else {
     const grid = gridCompact(inverter)
     const bat = batteryCompact(inverter)
-    parts.push(metricLine(rx, 152, 'PV', formatWatts(inverter.pv_power)))
-    parts.push(metricLine(rx, 180, 'Verbrauch', formatWatts(inverter.power_consumption)))
-    parts.push(metricLine(rx, 208, grid[0], grid[1]))
-    parts.push(metricLine(rx, 236, bat[0], bat[1]))
+    parts.push(metricLine(rx, ry, 'PV', formatWatts(inverter.pv_power)))
+    ry += ROW
+    parts.push(metricLine(rx, ry, 'Verbrauch', formatWatts(inverter.power_consumption)))
+    ry += ROW
+    parts.push(metricLine(rx, ry, grid[0], grid[1]))
+    ry += ROW
+    parts.push(metricLine(rx, ry, bat[0], bat[1]))
+    ry += ROW
   }
+  ry += BLOCK_GAP
 
   // --- right column: Internet (speedtest) — down + up on one line ---
-  parts.push(`<text x="${rx}" y="272" font-size="${FS.section}" font-weight="bold">Internet</text>`)
+  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Internet</text>`)
+  ry += HEADER_GAP
   const speed = (speedtest && speedtest[0]) || null
   const down = speed && speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
   const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
-  parts.push(`<text x="${rx}" y="300" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
+  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
+  ry += ROW
+  ry += BLOCK_GAP
 
   // --- right column: Heizung — status from the heat pump, inside/outside
   // temperatures from Netatmo ---
-  parts.push(`<text x="${rx}" y="338" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
+  parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
+  ry += HEADER_GAP
   if (!heizung && !netatmo) {
-    parts.push(`<text x="${rx}" y="366" font-size="${FS.metric}">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Keine Daten</text>`)
+    ry += ROW
   } else {
     const status = heizung ? (heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus') : '–'
-    parts.push(metricLine(rx, 366, 'Status', status))
+    parts.push(metricLine(rx, ry, 'Status', status))
+    ry += ROW
     const inside = formatTemp(netatmo ? netatmo.indoor_temperature : null)
     const outside = formatTemp(netatmo ? netatmo.outdoor_temperature : null)
-    parts.push(`<text x="${rx}" y="394" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
+    ry += ROW
   }
 
   // --- warnings overlay (only when something is actually wrong) ---
