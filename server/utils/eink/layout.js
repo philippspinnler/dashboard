@@ -2,13 +2,31 @@
 // so the layout is unit-testable without a server.
 //
 // The panel is physically 1-bit black/white (see memory: eink-panel-is-1bit):
-// the rasterized SVG is hard-thresholded to 1 bit. "Grey" (away people) is
-// therefore faked with a halftone PATTERN fill — a fine dot grid that survives
-// thresholding and reads as light grey next to solid-black text. resvg renders
-// pattern-filled text fine (verified with a probe).
+// the rasterized SVG is hard-thresholded to 1 bit. Two consequences shape the
+// sizing below:
+//   1. "Grey" (away people) is faked with a halftone PATTERN fill — a fine dot
+//      grid that survives thresholding and reads as light grey next to solid
+//      black text. resvg renders pattern-filled text fine (verified with a probe).
+//   2. Very small type looks fuzzy: thin antialiased strokes break up when
+//      quantised to 1 bit. The font sizes are a compromise — small enough to fit
+//      everything, large enough to stay crisp on the panel. Tune them in FS.
 
 const W = 800
 const H = 480
+
+// Font sizes in one place — the readable/compact tradeoff lives here.
+const FS = {
+  clock: 64,
+  date: 24,
+  presence: 20,
+  dayHeader: 20,
+  event: 18,
+  section: 18, // Energie / Internet headers
+  metric: 18, // metric value lines
+  warnTitle: 16,
+  warn: 16,
+  footer: 14,
+}
 
 // url() reference to the halftone pattern defined in <defs>. 1 black px per 2x2
 // tile ≈ 25% coverage → light grey.
@@ -50,7 +68,7 @@ function batteryCompact(inv) {
 
 function eventLine(e) {
   const prefix = e.all_day ? '·  ' : e.start_time + '  '
-  return prefix + truncate(e.summary, 32)
+  return prefix + truncate(e.summary, 30)
 }
 
 const WARN_TAGS = {
@@ -63,7 +81,7 @@ const WARN_TAGS = {
 
 // A metric line: small prefix + bold value, e.g. "PV **1,79 kW**".
 function metricLine(x, y, prefix, value) {
-  return `<text x="${x}" y="${y}" font-size="16">${escapeXml(prefix)} <tspan font-weight="bold">${escapeXml(value)}</tspan></text>`
+  return `<text x="${x}" y="${y}" font-size="${FS.metric}">${escapeXml(prefix)} <tspan font-weight="bold">${escapeXml(value)}</tspan></text>`
 }
 
 export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings }) {
@@ -75,7 +93,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   parts.push(`<rect width="${W}" height="${H}" fill="white"/>`)
 
   // header: clock left; presence row + date stacked top-right
-  parts.push(`<text x="24" y="66" font-size="60" font-weight="bold">${escapeXml(time)}</text>`)
+  parts.push(`<text x="24" y="68" font-size="${FS.clock}" font-weight="bold">${escapeXml(time)}</text>`)
   // presence: names in a row, right-aligned above the date, no label. Home people
   // in solid black, away people in the halftone "grey" — one right-anchored text
   // with a tspan per name so mixed fills stay on a single line.
@@ -88,10 +106,10 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
         return `<tspan${fill}>${escapeXml(sep + p.name)}</tspan>`
       })
       .join('')
-    parts.push(`<text x="${W - 24}" y="34" font-size="18" text-anchor="end">${spans}</text>`)
+    parts.push(`<text x="${W - 24}" y="34" font-size="${FS.presence}" text-anchor="end">${spans}</text>`)
   }
-  parts.push(`<text x="${W - 24}" y="66" font-size="22" text-anchor="end">${escapeXml(date)}</text>`)
-  parts.push(`<line x1="24" y1="84" x2="${W - 24}" y2="84" stroke="black" stroke-width="2"/>`)
+  parts.push(`<text x="${W - 24}" y="68" font-size="${FS.date}" text-anchor="end">${escapeXml(date)}</text>`)
+  parts.push(`<line x1="24" y1="88" x2="${W - 24}" y2="88" stroke="black" stroke-width="2"/>`)
 
   // --- warnings overlay geometry (drawn last, but sized up front so the
   // calendar can stop above it) ---
@@ -99,75 +117,75 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const warnShown = warnList.length > 0
   const shownWarns = warnList.slice(0, 3)
   const warnLineCount = shownWarns.length + (warnList.length > 3 ? 1 : 0)
-  const warnBoxH = 24 + warnLineCount * 20
-  const warnBottom = H - 34
+  const warnBoxH = 26 + warnLineCount * 22
+  const warnBottom = H - 32
   const warnTop = warnBottom - warnBoxH
 
   // --- left column: calendar ---
-  const calBottom = warnShown ? warnTop - 8 : H - 24
-  let y = 116
+  const calBottom = warnShown ? warnTop - 10 : H - 24
+  let y = 122
   if (!days || days.length === 0) {
-    parts.push(`<text x="24" y="${y}" font-size="18">Keine Termine</text>`)
+    parts.push(`<text x="24" y="${y}" font-size="${FS.event}">Keine Termine</text>`)
   } else {
     outer: for (const day of days) {
-      if (y > calBottom - 40) break
-      parts.push(`<text x="24" y="${y}" font-size="18" font-weight="bold">${escapeXml(truncate(day.day + ' · ' + day.date, 32))}</text>`)
-      y += 24
+      if (y > calBottom - 44) break
+      parts.push(`<text x="24" y="${y}" font-size="${FS.dayHeader}" font-weight="bold">${escapeXml(truncate(day.day + ' · ' + day.date, 30))}</text>`)
+      y += 28
       for (const e of day.events) {
         if (y > calBottom) break outer
-        parts.push(`<text x="34" y="${y}" font-size="16">${escapeXml(eventLine(e))}</text>`)
-        y += 23
+        parts.push(`<text x="34" y="${y}" font-size="${FS.event}">${escapeXml(eventLine(e))}</text>`)
+        y += 27
       }
-      y += 12
+      y += 14
     }
   }
 
   // column divider
-  parts.push(`<line x1="498" y1="100" x2="498" y2="${H - 44}" stroke="black" stroke-width="1"/>`)
+  parts.push(`<line x1="498" y1="104" x2="498" y2="${H - 44}" stroke="black" stroke-width="1"/>`)
 
   const rx = 514
 
   // --- right column: Energie (inverter, no bar) ---
-  parts.push(`<text x="${rx}" y="128" font-size="16" font-weight="bold">Energie</text>`)
+  parts.push(`<text x="${rx}" y="126" font-size="${FS.section}" font-weight="bold">Energie</text>`)
   if (!inverter) {
-    parts.push(`<text x="${rx}" y="156" font-size="16">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="158" font-size="${FS.metric}">Keine Daten</text>`)
   } else {
     const grid = gridCompact(inverter)
     const bat = batteryCompact(inverter)
     parts.push(metricLine(rx, 158, 'PV', formatWatts(inverter.pv_power)))
-    parts.push(metricLine(rx, 186, 'Verbrauch', formatWatts(inverter.power_consumption)))
-    parts.push(metricLine(rx, 214, grid[0], grid[1]))
-    parts.push(metricLine(rx, 242, bat[0], bat[1]))
+    parts.push(metricLine(rx, 190, 'Verbrauch', formatWatts(inverter.power_consumption)))
+    parts.push(metricLine(rx, 222, grid[0], grid[1]))
+    parts.push(metricLine(rx, 254, bat[0], bat[1]))
   }
 
   // --- right column: Internet (speedtest) ---
-  parts.push(`<text x="${rx}" y="298" font-size="16" font-weight="bold">Internet</text>`)
+  parts.push(`<text x="${rx}" y="308" font-size="${FS.section}" font-weight="bold">Internet</text>`)
   const speed = (speedtest && speedtest[0]) || null
   const down = speed && speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
   const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
-  parts.push(metricLine(rx, 328, '↓', down))
-  parts.push(metricLine(rx, 356, '↑', up))
+  parts.push(metricLine(rx, 340, '↓', down))
+  parts.push(metricLine(rx, 372, '↑', up))
 
   // footer: last-updated stamp
-  parts.push(`<text x="${W - 24}" y="${H - 14}" font-size="14" text-anchor="end">Stand ${escapeXml(time)}</text>`)
+  parts.push(`<text x="${W - 24}" y="${H - 14}" font-size="${FS.footer}" text-anchor="end">Stand ${escapeXml(time)}</text>`)
 
   // --- warnings overlay (only when something is actually wrong) ---
-  // Constrained to the left (calendar) column so the right column's Zuhause /
-  // Energie / Internet blocks stay fully visible; warnings are home-related and
-  // read naturally under the calendar.
+  // Constrained to the left (calendar) column so the right column's Energie /
+  // Internet blocks stay fully visible; warnings are home-related and read
+  // naturally under the calendar.
   if (warnShown) {
     const boxW = 466
     parts.push(`<rect x="24" y="${warnTop}" width="${boxW}" height="${warnBoxH}" fill="white" stroke="black" stroke-width="2"/>`)
-    parts.push(`<text x="40" y="${warnTop + 20}" font-size="15" font-weight="bold">Hinweise</text>`)
-    let wy = warnTop + 42
+    parts.push(`<text x="40" y="${warnTop + 22}" font-size="${FS.warnTitle}" font-weight="bold">Hinweise</text>`)
+    let wy = warnTop + 46
     for (const w of shownWarns) {
       const tag = WARN_TAGS[w.kind] || 'Hinweis'
       const line = `${tag}: ${w.name}${w.detail ? ' ' + w.detail : ''}`
-      parts.push(`<text x="40" y="${wy}" font-size="14">${escapeXml(truncate(line, 58))}</text>`)
-      wy += 20
+      parts.push(`<text x="40" y="${wy}" font-size="${FS.warn}">${escapeXml(truncate(line, 52))}</text>`)
+      wy += 22
     }
     if (warnList.length > 3) {
-      parts.push(`<text x="40" y="${wy}" font-size="14">+ ${warnList.length - 3} weitere</text>`)
+      parts.push(`<text x="40" y="${wy}" font-size="${FS.warn}">+ ${warnList.length - 3} weitere</text>`)
     }
   }
 

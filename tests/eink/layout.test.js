@@ -101,8 +101,8 @@ describe('buildScreenSvg', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: emojiDays, inverter })
     // Must not contain lone surrogates (U+FFFD replacement character)
     expect(svg).not.toContain('�')
-    // Must contain truncated emoji plus ellipsis (31 emoji + '…', limit 32)
-    expect(svg).toContain('🎉'.repeat(31) + '…')
+    // Must contain truncated emoji plus ellipsis (29 emoji + '…', limit 30)
+    expect(svg).toContain('🎉'.repeat(29) + '…')
   })
 
   it('renders presence as a right-anchored row: home black, away grey, no label', () => {
