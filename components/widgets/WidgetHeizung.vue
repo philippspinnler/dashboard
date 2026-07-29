@@ -5,9 +5,9 @@
     <div class="metric-grid">
       <span class="metric-label">Status</span>
       <component :is="stateIcon" class="metric-icon" :style="{ color: stateColor }" />
-      <span class="metric-value" :style="{ color: stateColor }">
-        {{ stateLabel }}<template v-if="state !== 'idle' && flow !== null"> {{ fmt(flow) }}</template>
-      </span>
+      <span class="metric-value" :style="{ color: stateColor }"
+        >{{ stateLabel }}<span v-if="state !== 'idle' && flow !== null" class="metric-unit">&nbsp;{{ fmt(flow) }}</span></span
+      >
 
       <template v-if="outdoor !== null">
         <span class="metric-label">Außen</span>
