@@ -14,10 +14,11 @@
 const W = 800
 const H = 480
 
-// Column split: calendar left of the divider, sections right of it. The right
+// Column split: calendar left of the divider, sections right of it. The divider
+// sits at the horizontal centre of the content area (margins 24..776); the right
 // column runs from RX to the right margin.
-const DIVIDER_X = 466
-const RX = 482
+const DIVIDER_X = 400
+const RX = 416
 
 // Font sizes in one place — the readable/compact tradeoff lives here.
 const FS = {
@@ -300,7 +301,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     for (const w of shownWarns) {
       const tag = WARN_TAGS[w.kind] || 'Hinweis'
       const line = `${tag}: ${w.name}${w.detail ? ' ' + w.detail : ''}`
-      parts.push(`<text x="40" y="${wy}" font-size="${FS.warn}">${escapeXml(truncate(line, 52))}</text>`)
+      parts.push(`<text x="40" y="${wy}" font-size="${FS.warn}">${escapeXml(truncate(line, 42))}</text>`)
       wy += 22
     }
     if (warnList.length > 3) {
