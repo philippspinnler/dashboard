@@ -58,18 +58,21 @@ describe('buildScreenSvg', () => {
     expect(svg).toMatch(/^<svg[^>]*width="800" height="480"/)
   })
 
-  it("shows today's weather icon and min/max in the top-right, date shifted left", () => {
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter, weather })
+  it("shows today's weather full-height in the corner with high above low, date centred", () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter, weather, presence })
     expect(svg).toContain('class="wx"') // weather icon present
-    expect(svg).toContain('12° 20°') // today's rounded min/max (12.3 -> 12, 19.8 -> 20)
-    // date is right-anchored left of the corner, not at the far margin
-    expect(svg).toMatch(/<text x="636"[^>]*text-anchor="end"[^>]*>Mittwoch, 29\. Juli<\/text>/)
+    // high (20°) sits above low (12°) — separate stacked lines to the left
+    expect(svg).toMatch(/<text x="692" y="42"[^>]*text-anchor="end"[^>]*>20°<\/text>/) // high on top
+    expect(svg).toMatch(/<text x="692" y="72"[^>]*text-anchor="end"[^>]*>12°<\/text>/) // low below
+    // date centred above the people row
+    expect(svg).toMatch(/<text x="\d+" y="40"[^>]*text-anchor="middle"[^>]*>Mittwoch, 29\. Juli<\/text>/)
+    expect(svg).toMatch(/<text x="\d+" y="70"[^>]*text-anchor="middle"[^>]*><tspan/)
   })
 
-  it('keeps the date in the corner when weather is unavailable', () => {
+  it('centres the date when weather is unavailable', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
     expect(svg).not.toContain('class="wx"')
-    expect(svg).toMatch(/<text x="776" y="68"[^>]*text-anchor="end"[^>]*>Mittwoch<\/text>/)
+    expect(svg).toMatch(/text-anchor="middle"[^>]*>Mittwoch<\/text>/)
   })
 
   it('escapes XML special characters in event summaries', () => {
@@ -128,10 +131,10 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('🎉'.repeat(29) + '…')
   })
 
-  it('renders presence as a right-anchored row: home black, away grey, no label', () => {
+  it('renders presence as a centred row: home black, away grey, no label', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, presence })
-    // one right-anchored text with a tspan per name
-    expect(svg).toMatch(/<text[^>]*text-anchor="end"[^>]*><tspan/)
+    // one centre-anchored text with a tspan per name
+    expect(svg).toMatch(/<text[^>]*text-anchor="middle"[^>]*><tspan/)
     // home names in plain tspans (no grey fill)
     expect(svg).toMatch(/<tspan>Philipp<\/tspan>/)
     expect(svg).toMatch(/<tspan>\s+Anna<\/tspan>/)
