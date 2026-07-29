@@ -47,6 +47,10 @@ function formatWatts(w) {
   return Math.round(abs) + ' W'
 }
 
+function formatTemp(v) {
+  return v == null ? '–' : Number(v).toFixed(1).replace('.', ',') + '°'
+}
+
 // Grid flow as [directionWord, value]; the direction stays a word so a big value
 // like "5,32 kW" never overflows the narrow right column.
 function gridCompact(inv) {
@@ -84,7 +88,7 @@ function metricLine(x, y, prefix, value) {
   return `<text x="${x}" y="${y}" font-size="${FS.metric}">${escapeXml(prefix)} <tspan font-weight="bold">${escapeXml(value)}</tspan></text>`
 }
 
-export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings }) {
+export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung }) {
   const parts = []
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans">`)
   // Halftone pattern for "grey" text on the 1-bit panel: 1 black px per 2x2 tile.
@@ -146,25 +150,37 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const rx = 514
 
   // --- right column: Energie (inverter, no bar) ---
-  parts.push(`<text x="${rx}" y="126" font-size="${FS.section}" font-weight="bold">Energie</text>`)
+  parts.push(`<text x="${rx}" y="122" font-size="${FS.section}" font-weight="bold">Energie</text>`)
   if (!inverter) {
-    parts.push(`<text x="${rx}" y="158" font-size="${FS.metric}">Keine Daten</text>`)
+    parts.push(`<text x="${rx}" y="150" font-size="${FS.metric}">Keine Daten</text>`)
   } else {
     const grid = gridCompact(inverter)
     const bat = batteryCompact(inverter)
-    parts.push(metricLine(rx, 158, 'PV', formatWatts(inverter.pv_power)))
-    parts.push(metricLine(rx, 190, 'Verbrauch', formatWatts(inverter.power_consumption)))
-    parts.push(metricLine(rx, 222, grid[0], grid[1]))
-    parts.push(metricLine(rx, 254, bat[0], bat[1]))
+    parts.push(metricLine(rx, 150, 'PV', formatWatts(inverter.pv_power)))
+    parts.push(metricLine(rx, 178, 'Verbrauch', formatWatts(inverter.power_consumption)))
+    parts.push(metricLine(rx, 206, grid[0], grid[1]))
+    parts.push(metricLine(rx, 234, bat[0], bat[1]))
   }
 
   // --- right column: Internet (speedtest) ---
-  parts.push(`<text x="${rx}" y="308" font-size="${FS.section}" font-weight="bold">Internet</text>`)
+  parts.push(`<text x="${rx}" y="266" font-size="${FS.section}" font-weight="bold">Internet</text>`)
   const speed = (speedtest && speedtest[0]) || null
   const down = speed && speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
   const up = speed && speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
-  parts.push(metricLine(rx, 340, '↓', down))
-  parts.push(metricLine(rx, 372, '↑', up))
+  parts.push(metricLine(rx, 294, '↓', down))
+  parts.push(metricLine(rx, 322, '↑', up))
+
+  // --- right column: Heizung (status + inside/outside temp only) ---
+  parts.push(`<text x="${rx}" y="354" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
+  if (!heizung) {
+    parts.push(`<text x="${rx}" y="382" font-size="${FS.metric}">Keine Daten</text>`)
+  } else {
+    const status = heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus'
+    parts.push(metricLine(rx, 382, 'Status', status))
+    const inside = formatTemp(heizung.room_actual)
+    const outside = formatTemp(heizung.outdoor)
+    parts.push(`<text x="${rx}" y="410" font-size="${FS.metric}">Innen <tspan font-weight="bold">${escapeXml(inside)}</tspan>   Außen <tspan font-weight="bold">${escapeXml(outside)}</tspan></text>`)
+  }
 
   // footer: last-updated stamp
   parts.push(`<text x="${W - 24}" y="${H - 14}" font-size="${FS.footer}" text-anchor="end">Stand ${escapeXml(time)}</text>`)

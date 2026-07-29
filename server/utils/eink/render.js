@@ -47,12 +47,13 @@ export async function renderEinkFrame(event) {
   const now = dayjs().tz(timezone)
 
   // a failed source renders as "Keine …"/"—" in the layout; the frame always builds
-  const [days, inverter, presence, speedtest, warnings] = await Promise.all([
+  const [days, inverter, presence, speedtest, warnings, heizung] = await Promise.all([
     event.$fetch('/api/calendar').catch(() => null),
     event.$fetch('/api/inverter').catch(() => null),
     event.$fetch('/api/presence').catch(() => null),
     event.$fetch('/api/speedtest').catch(() => null),
     event.$fetch('/api/warnings').catch(() => null),
+    event.$fetch('/api/heizung').catch(() => null),
   ])
 
   const svg = buildScreenSvg({
@@ -63,6 +64,7 @@ export async function renderEinkFrame(event) {
     presence,
     speedtest,
     warnings,
+    heizung,
   })
 
   const fontFiles = await loadFonts()
