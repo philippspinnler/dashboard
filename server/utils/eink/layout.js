@@ -10,8 +10,8 @@ function escapeXml(s) {
 }
 
 function truncate(s, max) {
-  s = String(s)
-  return s.length <= max ? s : s.slice(0, max - 1) + '…'
+  const chars = [...String(s)]
+  return chars.length <= max ? String(s) : chars.slice(0, max - 1).join('') + '…'
 }
 
 function formatWatts(w) {

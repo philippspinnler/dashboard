@@ -50,7 +50,7 @@ Nuxt server ──(compose SVG → rasterize → 1-bit pack)──▶ /api/eink/
 
 - **Top band:** large clock (HH:MM) with the date next to it.
 - **Left column:** calendar — upcoming events grouped by day
-  (Heute/Morgen/weekday), event time + title + calendar name, as many days as
+  (Heute/Morgen/weekday), event time + title (calendar name deliberately omitted — no room, and its color coding is meaningless in 1-bit), as many days as
   fit.
 - **Right column:** inverter — PV power, house consumption, grid
   import/export, battery SOC and charge/discharge, using the same

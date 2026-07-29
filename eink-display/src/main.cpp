@@ -14,6 +14,10 @@
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include "config.h"
 
+#if FULL_REFRESH_EVERY < 1
+#error "FULL_REFRESH_EVERY must be >= 1"
+#endif
+
 // Pin mapping is fixed by the driver board
 static const uint8_t PIN_CS = 15;
 static const uint8_t PIN_DC = 4;
