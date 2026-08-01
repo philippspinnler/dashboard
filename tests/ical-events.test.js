@@ -61,4 +61,30 @@ describe('collectEvents recurring expansion', () => {
     expect(events.length).toBe(1)
     expect(events[0].start_date.substring(0, 10)).toBe('2026-08-01')
   })
+
+  it('emits an edited occurrence (RECURRENCE-ID override) exactly once', () => {
+    // node-ical registers each override under two keys of ev.recurrences (a
+    // date-only key and a full-ISO key) pointing at the same object, so naive
+    // Object.values() iteration would push the occurrence twice.
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'BEGIN:VEVENT',
+      'UID:tempel-1',
+      'DTSTART;TZID=Europe/Zurich:20250703T100000',
+      'RRULE:FREQ=MONTHLY;BYDAY=1TH',
+      'SUMMARY:Tempel',
+      'END:VEVENT',
+      'BEGIN:VEVENT',
+      'UID:tempel-1',
+      'RECURRENCE-ID;TZID=Europe/Zurich:20260806T100000',
+      'DTSTART;TZID=Europe/Zurich:20260806T100000',
+      'SUMMARY:Tempel',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\n')
+    const events = collect(ical.sync.parseICS(ics), '2026-08-01', '2026-08-12')
+    expect(events.length).toBe(1)
+    expect(events[0].summary).toBe('Tempel')
+    expect(events[0].start_date.substring(0, 10)).toBe('2026-08-06')
+  })
 })
