@@ -101,12 +101,40 @@ function eventLine(e) {
   return prefix + truncate(e.summary, 30)
 }
 
-const WARN_TAGS = {
-  battery: 'Akku',
-  problem: 'Fehler',
-  watch: 'Achtung',
-  humidity: 'Feuchte',
-  maintenance: 'Wartung',
+// Per-kind warning icons, mirroring the big dashboard's WarningsOverlay
+// (battery / droplet / wrench / warning triangle). Solid black fills with white
+// cut-outs so they survive the 1-bit threshold — thin strokes would fuzz out at
+// this size. The class carries the kind for tests and debugging.
+function warnIcon(kind, x, top, size) {
+  const s = size / 24
+  const g = (inner) => `<g class="warn-${kind}" transform="translate(${x} ${top}) scale(${s})">${inner}</g>`
+  switch (kind) {
+    case 'battery':
+      return g(
+        '<rect x="1.5" y="7" width="18.5" height="10" rx="2" fill="black"/>'
+        + '<rect x="20.5" y="10" width="2.5" height="4" fill="black"/>'
+        + '<rect x="9.6" y="9.2" width="2.2" height="3.8" fill="white"/>'
+        + '<rect x="9.6" y="14" width="2.2" height="1.8" fill="white"/>',
+      )
+    case 'humidity':
+      return g('<path fill="black" d="M12 2.5C12 2.5 5 10.5 5 15.5C5 19.6 8.1 22.5 12 22.5C15.9 22.5 19 19.6 19 15.5C19 10.5 12 2.5 12 2.5Z"/>')
+    case 'maintenance':
+      // vertical wrench (open-slot head + handle) rotated 45° to the classic pose
+      return g(
+        '<g transform="rotate(45 12 12)">'
+        + '<circle cx="12" cy="6.5" r="5" fill="black"/>'
+        + '<rect x="10.2" y="0" width="3.6" height="6" fill="white"/>'
+        + '<rect x="10.3" y="9" width="3.4" height="13" rx="1.5" fill="black"/>'
+        + '</g>',
+      )
+    default:
+      // problem / watch: warning triangle with exclamation, like the dashboard
+      return g(
+        '<path fill="black" d="M12 2L23 21H1Z"/>'
+        + '<rect x="11" y="9" width="2.1" height="6" fill="white"/>'
+        + '<rect x="11" y="16.6" width="2.1" height="2" fill="white"/>',
+      )
+  }
 }
 
 // A metric line: small prefix + bold value, e.g. "PV **1,79 kW**".
@@ -356,13 +384,17 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     parts.push(`<text x="40" y="${warnTop + 22}" font-size="${FS.warnTitle}" font-weight="bold">Hinweise</text>`)
     let wy = warnTop + 46
     for (const w of shownWarns) {
-      const tag = WARN_TAGS[w.kind] || 'Hinweis'
-      const line = `${tag}: ${w.name}${w.detail ? ' ' + w.detail : ''}`
-      parts.push(`<text x="40" y="${wy}" font-size="${FS.warn}">${escapeXml(truncate(line, 42))}</text>`)
+      // dashboard style: kind icon, then name, then the value in bold. Truncate
+      // the name (not the whole line) so the detail always stays visible.
+      parts.push(warnIcon(w.kind, 40, wy - 12, 15))
+      const detail = w.detail ? String(w.detail) : ''
+      const name = truncate(w.name, detail ? 38 - [...detail].length : 38)
+      const detailSpan = detail ? ` <tspan font-weight="bold">${escapeXml(detail)}</tspan>` : ''
+      parts.push(`<text x="62" y="${wy}" font-size="${FS.warn}">${escapeXml(name)}${detailSpan}</text>`)
       wy += 22
     }
     if (warnList.length > 3) {
-      parts.push(`<text x="40" y="${wy}" font-size="${FS.warn}">+ ${warnList.length - 3} weitere</text>`)
+      parts.push(`<text x="62" y="${wy}" font-size="${FS.warn}">+ ${warnList.length - 3} weitere</text>`)
     }
   }
 

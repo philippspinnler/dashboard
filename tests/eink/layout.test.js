@@ -191,8 +191,28 @@ describe('buildScreenSvg', () => {
 
     const withWarn = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings })
     expect(withWarn).toContain('Hinweise')
-    expect(withWarn).toContain('Akku: Thermostat Bad 8%')
-    expect(withWarn).toContain('Fehler: Grünbeck Salzvorrat gering')
+    expect(withWarn).toContain('Thermostat Bad ')
+    expect(withWarn).toContain('8%')
+    expect(withWarn).toContain('Grünbeck ')
+    expect(withWarn).toContain('Salzvorrat gering')
+    expect(withWarn).toContain('warn-battery')
+    expect(withWarn).toContain('warn-problem')
+  })
+
+  it('marks warning rows with a per-kind icon like the big dashboard', () => {
+    const mixed = {
+      warnings: [
+        { kind: 'humidity', name: 'Wohnzimmer', detail: '62%', severity: 'warning' },
+        { kind: 'maintenance', name: 'Filter', detail: 'fällig', severity: 'warning' },
+        { kind: 'watch', name: 'Staubsauger', detail: 'Fehler', severity: 'warning' },
+      ],
+    }
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings: mixed })
+    expect(svg).toContain('warn-humidity')
+    expect(svg).toContain('warn-maintenance')
+    expect(svg).toContain('warn-watch')
+    expect(svg).toContain('Wohnzimmer ')
+    expect(svg).not.toContain('Feuchte:')
   })
 
   it('collapses extra warnings into a "+N weitere" line', () => {
