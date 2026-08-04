@@ -215,6 +215,23 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('Feuchte:')
   })
 
+  it('starts another day when its header plus one event still fit above the warnings box', () => {
+    // Mirrors the photo that exposed the bug: two days plus warnings left the
+    // third day out even though header (28px) + one event line fit in the gap.
+    const threeDays = [
+      { day: 'Heute', date: '4. August', events: [{ special_event: { type: 'birthday', name: 'Alice', years: 88 } }, { start_time: '08:15', summary: 'Buchung', all_day: false }] },
+      { day: 'Morgen', date: '5. August', events: [{ special_event: { type: 'birthday', name: 'Anna', years: 40 } }, { start_time: '12:15', summary: 'CrossFit', all_day: false }, { start_time: '15:00', summary: 'Sommerparty', all_day: false }] },
+      { day: 'Donnerstag', date: '6. August', events: [{ special_event: { type: 'birthday', name: 'Noë', years: 17 } }] },
+    ]
+    const twoWarns = { warnings: [
+      { kind: 'humidity', name: 'Wohnzimmer', detail: '61%', severity: 'warning' },
+      { kind: 'humidity', name: 'Technikraum', detail: '60%', severity: 'warning' },
+    ] }
+    const svg = buildScreenSvg({ time: '09:09', date: 'Dienstag', days: threeDays, inverter, warnings: twoWarns })
+    expect(svg).toContain('Donnerstag · 6. August')
+    expect(svg).toContain('Noë (17)')
+  })
+
   it('leaves clearance between the last warning line and the box border', () => {
     // 2 warnings → last baseline at top+68; the box must extend well past the
     // icon bottom (baseline+3) so it doesn't sit on the border: 38 + 2*22 = 82.

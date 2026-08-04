@@ -290,7 +290,9 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     parts.push(`<text x="24" y="${y}" font-size="${FS.event}">Keine Termine</text>`)
   } else {
     outer: for (const day of days) {
-      if (y > calBottom - 44) break
+      // start a day only if its header AND at least its first event line fit —
+      // a header with zero events under it would be misleading
+      if (y + HEADER_GAP > calBottom) break
       parts.push(`<text x="24" y="${y}" font-size="${FS.dayHeader}" font-weight="bold">${escapeXml(truncate(day.day + ' · ' + day.date, 30))}</text>`)
       y += HEADER_GAP
       for (const e of day.events) {
