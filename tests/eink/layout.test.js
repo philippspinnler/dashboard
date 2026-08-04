@@ -215,6 +215,13 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('Feuchte:')
   })
 
+  it('leaves clearance between the last warning line and the box border', () => {
+    // 2 warnings → last baseline at top+68; the box must extend well past the
+    // icon bottom (baseline+3) so it doesn't sit on the border: 38 + 2*22 = 82.
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings })
+    expect(svg).toMatch(/<rect x="24" y="\d+" width="\d+" height="82"/)
+  })
+
   it('collapses extra warnings into a "+N weitere" line', () => {
     const many = { warnings: Array.from({ length: 6 }, (_, i) => ({ kind: 'battery', name: 'Sensor ' + i, detail: '5%' })) }
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings: many })
