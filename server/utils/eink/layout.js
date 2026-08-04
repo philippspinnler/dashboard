@@ -275,7 +275,10 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   const warnShown = warnList.length > 0
   const shownWarns = warnList.slice(0, 3)
   const warnLineCount = shownWarns.length + (warnList.length > 3 ? 1 : 0)
-  const warnBoxH = 26 + warnLineCount * 22
+  // Box height: last line's baseline sits at 24 + 22*count from the top; leave
+  // ~14px below it so icons (baseline+3) and descenders clear the border with
+  // the same ~10px of air the title gets at the top.
+  const warnBoxH = 38 + warnLineCount * 22
   const warnBottom = BOTTOM // same bottom edge margin as the calendar/divider
   const warnTop = warnBottom - warnBoxH
 
