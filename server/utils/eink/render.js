@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Resvg } from '@resvg/resvg-js'
 import dayjs from '~/lib/datetime'
-import { buildScreenSvg } from './layout.js'
+import { buildScreenSvg, buildClockStripSvg } from './layout.js'
+import { packClockStrip } from './clockstrip.js'
 import { packRgbaTo1Bit } from './pack.js'
 
 // Renders the full e-ink frame: data via the existing (cached) API handlers,
@@ -51,6 +52,8 @@ const FRAME_TTL_MS = 15000
 let cachedFrame = null
 let cachedAt = 0
 
+// Returns { frame, time } — time is the HH:mm the frame was rendered with, so
+// screen.bin can hand it to the firmware (x-eink-time) for local clock ticks.
 export async function renderEinkFrame(event) {
   const mock = isMockEnabled(event)
   if (!mock && cachedFrame && Date.now() - cachedAt < FRAME_TTL_MS) {
@@ -96,10 +99,32 @@ export async function renderEinkFrame(event) {
     },
   })
   const img = resvg.render()
-  const frame = packRgbaTo1Bit(img.pixels, img.width, img.height)
+  const result = {
+    frame: packRgbaTo1Bit(img.pixels, img.width, img.height),
+    time: now.format('HH:mm'),
+  }
   if (!mock) {
-    cachedFrame = frame
+    cachedFrame = result
     cachedAt = Date.now()
   }
-  return frame
+  return result
+}
+
+// The clock glyph strip is pure font geometry — render it once per process.
+let clockStripPromise
+export function renderClockStrip() {
+  clockStripPromise ||= loadFonts()
+    .then((fontFiles) => {
+      const resvg = new Resvg(buildClockStripSvg(), {
+        background: '#ffffff',
+        font: { fontFiles, loadSystemFonts: false, defaultFontFamily: 'DejaVu Sans' },
+      })
+      const img = resvg.render()
+      return packClockStrip(packRgbaTo1Bit(img.pixels, img.width, img.height))
+    })
+    .catch((err) => {
+      clockStripPromise = undefined
+      throw err
+    })
+  return clockStripPromise
 }
