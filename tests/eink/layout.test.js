@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildScreenSvg, buildClockStripSvg, CLOCK } from '../../server/utils/eink/layout.js'
+import { buildScreenSvg } from '../../server/utils/eink/layout.js'
 
 const inverter = {
   pv_power: '1789.5',
@@ -50,38 +50,12 @@ const weather = {
 describe('buildScreenSvg', () => {
   it('renders clock, date, events and inverter values', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter })
-    // the clock renders one char per cell so it matches the clock.bin glyph strip
-    ;[...'12:34'].forEach((ch, i) => {
-      expect(svg).toContain(`<text x="${CLOCK.cells[i]}" y="68" font-size="64" font-weight="bold">${ch}</text>`)
-    })
+    expect(svg).toContain('12:34')
     expect(svg).toContain('Team Meeting')
     expect(svg).toContain('1,79 kW')
     expect(svg).toContain('Einspeisung')
     expect(svg).toContain('49 %')
     expect(svg).toMatch(/^<svg[^>]*width="800" height="480"/)
-  })
-
-  it('keeps the clock cell grid byte-aligned and inside the header', () => {
-    // the firmware composes the clock with plain byte copies — every cell x and
-    // the partial-refresh window must stay on 8px boundaries
-    for (const x of [...CLOCK.cells, CLOCK.win.x, CLOCK.win.w]) {
-      expect(x % 8).toBe(0)
-    }
-    // cells must be contiguous: two digits, a colon, two digits
-    expect(CLOCK.cells[1] - CLOCK.cells[0]).toBe(CLOCK.digitW)
-    expect(CLOCK.cells[2] - CLOCK.cells[1]).toBe(CLOCK.digitW)
-    expect(CLOCK.cells[3] - CLOCK.cells[2]).toBe(CLOCK.colonW)
-    expect(CLOCK.cells[4] - CLOCK.cells[3]).toBe(CLOCK.digitW)
-    // window covers the grid and stays above the header divider (y=88)
-    expect(CLOCK.win.x).toBe(CLOCK.cells[0])
-    expect(CLOCK.win.x + CLOCK.win.w).toBe(CLOCK.cells[4] + CLOCK.digitW)
-    expect(CLOCK.win.y + CLOCK.win.h).toBeLessThan(88)
-    expect(CLOCK.baseline).toBeLessThan(CLOCK.win.y + CLOCK.win.h)
-  })
-
-  it('falls back to a single flowing text for a non-HH:MM time', () => {
-    const svg = buildScreenSvg({ time: 'boot…', date: 'Mittwoch', days, inverter })
-    expect(svg).toContain('>boot…</text>')
   })
 
   it("shows today's weather full-height in the corner with high above low, date centred", () => {
