@@ -52,22 +52,7 @@ const WX_X = W - MARGIN - WX_SIZE // icon pinned to the right margin
 const WX_TOP = 8
 const WX_TEMP_X = WX_X - 12 // stacked high/low temps, right-anchored left of the icon
 const WX_BLOCK_LEFT = 636 // approx left edge of the weather block, for centring the date
-const CLOCK_RIGHT = 240 // right edge of the clock cell grid, for centring the date
-
-// Clock cell grid, shared with /api/eink/clock.bin: the firmware redraws the
-// clock locally between server frames (see eink-display/README.md), so each
-// HH:MM character sits in its own fixed cell instead of flowing at natural
-// advance widths (~44.5px/digit, ~26px colon at this size). Every cell x and
-// the window x/w are multiples of 8 so the firmware composes the clock with
-// plain byte copies. The ~3px of extra air per digit is invisible at 64px.
-export const CLOCK = {
-  fontSize: FS.clock,
-  baseline: CLOCK_BASE, // panel-space text baseline
-  digitW: 48,
-  colonW: 24,
-  cells: [MARGIN, 72, 120, 144, 192], // char origins for "HH:MM"
-  win: { x: MARGIN, y: 8, w: 216, h: 64 }, // partial-refresh window around the clock
-}
+const CLOCK_RIGHT = 210 // approx right edge of the clock, for centring the date
 
 // url() reference to the halftone pattern defined in <defs>. 2x2 checkerboard
 // (50% coverage) → mid grey, darker than a light dither but not solid black.
@@ -247,15 +232,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   // weather (full-height icon, with today's high above the low to its left)
   // pinned to the far corner. Home people solid black, away people halftone grey
   // (one centred text, a tspan per name, so mixed fills share a line).
-  // A well-formed HH:MM lands on the CLOCK cell grid so it matches the glyph
-  // strip; anything else (tests, fallbacks) flows naturally as one text.
-  if (/^\d\d:\d\d$/.test(String(time))) {
-    for (let i = 0; i < 5; i++) {
-      parts.push(`<text x="${CLOCK.cells[i]}" y="${CLOCK_BASE}" font-size="${FS.clock}" font-weight="bold">${String(time)[i]}</text>`)
-    }
-  } else {
-    parts.push(`<text x="${MARGIN}" y="${CLOCK_BASE}" font-size="${FS.clock}" font-weight="bold">${escapeXml(time)}</text>`)
-  }
+  parts.push(`<text x="${MARGIN}" y="${CLOCK_BASE}" font-size="${FS.clock}" font-weight="bold">${escapeXml(time)}</text>`)
 
   const persons = (presence && presence.persons) || []
   const peopleSpans = persons
@@ -426,27 +403,6 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     }
   }
 
-  parts.push('</svg>')
-  return parts.join('\n')
-}
-
-// The glyph strip behind /api/eink/clock.bin: '0'…'9' then ':', one cell per
-// glyph, stacked vertically in a digit-wide column. Each glyph is drawn at the
-// same baseline offset it has inside the CLOCK window on screen, so a clock the
-// firmware composes from these cells is pixel-identical to a server-rendered
-// frame. The colon shares the digit-wide column; only its first colonW pixels
-// are packed into the strip (its ink is far narrower than that).
-export function buildClockStripSvg() {
-  const cellH = CLOCK.win.h
-  const base = CLOCK.baseline - CLOCK.win.y // baseline offset within a cell
-  const glyphs = [...'0123456789:']
-  const parts = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${CLOCK.digitW}" height="${cellH * glyphs.length}" font-family="DejaVu Sans">`,
-    `<rect width="${CLOCK.digitW}" height="${cellH * glyphs.length}" fill="white"/>`,
-  ]
-  glyphs.forEach((ch, i) => {
-    parts.push(`<text x="0" y="${i * cellH + base}" font-size="${CLOCK.fontSize}" font-weight="bold">${ch}</text>`)
-  })
   parts.push('</svg>')
   return parts.join('\n')
 }

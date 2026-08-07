@@ -5,11 +5,8 @@ import { renderEinkFrame } from '../../utils/eink/render.js'
 // renderEinkFrame applies a short (~15s) frame cache so the firmware's two
 // intra-cycle fetches match; HTTP stays no-store so no proxy caches it longer.
 export default defineEventHandler(async (event) => {
-  const { frame, time } = await renderEinkFrame(event)
+  const frame = await renderEinkFrame(event)
   setHeader(event, 'content-type', 'application/octet-stream')
   setHeader(event, 'cache-control', 'no-store')
-  // the HH:mm baked into this frame — the firmware ticks its local clock
-  // (redrawn between fetches without WiFi traffic) from this, no NTP needed
-  setHeader(event, 'x-eink-time', time)
   return frame
 })

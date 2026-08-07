@@ -499,7 +499,7 @@ components/
 composables/            # client-side data polling & overlay positioning helpers
 server/
   api/                  # one Nitro route per data source (cached, same-origin)
-    eink/               # /api/eink/screen.bin + screen.png + clock.bin (see below)
+    eink/               # /api/eink/screen.bin + /api/eink/screen.png (see below)
   mocks/                # mock payloads served when NUXT_PUBLIC_USE_MOCK_DATA=true
   utils/                # Home Assistant REST helpers, caching, config parsing
     eink/               # layout + rendering for the e-ink companion (screen.bin/screen.png)
@@ -525,11 +525,10 @@ A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weat
 | --- | --- |
 | `/api/eink/screen.bin` | Raw 48,000-byte 1-bit frame (800×480) for the e-ink companion's ESP8266 |
 | `/api/eink/screen.png` | Same frame as PNG, for browser preview |
-| `/api/eink/clock.bin` | Clock glyph strip (`0`–`9` + `:`) — lets the firmware redraw the clock locally each minute |
 
 ### Flashing the ESP
 
-The firmware downloads `screen.bin` every few minutes and streams it to the panel — all layout is server-side, so you rarely re-flash. Between frames it ticks the clock locally from the pre-fetched glyph strip (pixel-identical to the server rendering), so the panel shows the right minute without per-minute WiFi traffic.
+The firmware just downloads `screen.bin` every minute and streams it to the panel — all layout is server-side, so you rarely re-flash.
 
 1. Install [PlatformIO](https://platformio.org) (`brew install platformio`, or the VS Code extension).
 2. In `eink-display/`, copy `src/config.example.h` to `src/config.h` and fill in your WiFi credentials and the dashboard's base URL — plain HTTP on your LAN, e.g. `http://<host>:8201` (the ESP8266 can't do HTTPS, and only 2.4 GHz Wi-Fi).
