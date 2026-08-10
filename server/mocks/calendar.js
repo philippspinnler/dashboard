@@ -4,7 +4,7 @@ export default [
     date: '27. Oktober',
     events: [
       {
-        summary: 'Team Meeting',
+        summary: '🎉 Team Meeting',
         start_date: '2025-10-27T09:00:00+01:00',
         start_time: '09:00',
         all_day: false,

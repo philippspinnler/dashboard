@@ -26,12 +26,20 @@ function loadFonts() {
   fontsPromise ||= Promise.all([
     useStorage('assets:server').getItemRaw('fonts/DejaVuSans.ttf'),
     useStorage('assets:server').getItemRaw('fonts/DejaVuSans-Bold.ttf'),
+    // Monochrome (outline) Noto Emoji — per-glyph fallback for emoji in
+    // calendar entries; the color emoji fonts cannot be rasterized by resvg.
+    useStorage('assets:server').getItemRaw('fonts/NotoEmoji-Regular.ttf'),
   ])
-    .then(async ([sans, sansBold]) => {
+    .then(async ([sans, sansBold, emoji]) => {
       const dir = await mkdtemp(join(tmpdir(), 'eink-fonts-'))
-      const paths = [join(dir, 'DejaVuSans.ttf'), join(dir, 'DejaVuSans-Bold.ttf')]
+      const paths = [
+        join(dir, 'DejaVuSans.ttf'),
+        join(dir, 'DejaVuSans-Bold.ttf'),
+        join(dir, 'NotoEmoji-Regular.ttf'),
+      ]
       await writeFile(paths[0], Buffer.from(sans))
       await writeFile(paths[1], Buffer.from(sansBold))
+      await writeFile(paths[2], Buffer.from(emoji))
       return paths
     })
     .catch((err) => {

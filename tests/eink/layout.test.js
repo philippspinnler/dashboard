@@ -90,6 +90,11 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('stroke-linecap="round"')
   })
 
+  it('declares the emoji fallback font in the root font stack', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: [], inverter })
+    expect(svg).toContain('font-family="DejaVu Sans, Noto Emoji"')
+  })
+
   it('escapes XML special characters in event summaries', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
     expect(svg).toContain('Zoo &amp; Aquarium &lt;Besuch&gt;')
