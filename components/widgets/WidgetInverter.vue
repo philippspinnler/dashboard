@@ -11,9 +11,9 @@
       <component :is="getBatteryIcon" class="metric-icon" :style="{ color: batteryAccent }" />
       <span class="metric-value metric-value--battery">
         <span>{{ batterySOCFormatted }}<span class="metric-unit">&nbsp;%</span></span>
-        <span v-if="batteryFlow" class="metric-sub" :style="{ color: batteryFlowColor }">
-          {{ batteryFlowText }} {{ batteryFlowWatts }}
-        </span>
+        <span v-if="batteryFlow" class="metric-sub" :style="{ color: batteryFlowColor }"
+          >{{ batteryFlowText }} {{ batteryFlowWatts.num }}<span class="metric-unit">{{ batteryFlowWatts.unit }}</span></span
+        >
       </span>
 
       <span class="metric-label">Haus</span>
@@ -74,7 +74,9 @@ const batteryFlow = computed(() => {
 })
 const batteryFlowText = computed(() => (batteryFlow.value === 'charging' ? 'lädt' : 'entlädt'))
 const batteryFlowColor = computed(() => (batteryFlow.value === 'charging' ? '#22c55e' : '#fb923c'))
-const batteryFlowWatts = computed(() => formatPower(Math.abs(batteryPower.value)))
+// Split like the main rows so the sub-line's number shares the same right
+// edge and its W sits in the unit gutter under the %.
+const batteryFlowWatts = computed(() => split(formatPower(Math.abs(batteryPower.value))))
 
 const getBatteryIcon = computed(() => {
   if (batterySOC.value > 80) return BatteryFull
