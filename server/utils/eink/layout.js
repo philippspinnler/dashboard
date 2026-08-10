@@ -67,6 +67,16 @@ function truncate(s, max) {
   return chars.length <= max ? String(s) : chars.slice(0, max - 1).join('') + '…'
 }
 
+// Collapse multi-codepoint emoji to their base pictograph (🚴‍♂️ → 🚴,
+// 👨‍👩‍👧 → 👨, 💅🏼 → 💅). resvg's font fallback is per-glyph, so a ZWJ
+// cluster assigned to DejaVu renders its emoji part as tofu instead of
+// falling back to Noto Emoji — only the base emoji renders reliably.
+function simplifyEmoji(s) {
+  return String(s)
+    .replace(/[\u{FE0F}\u{1F3FB}-\u{1F3FF}]/gu, '') // variation selectors + skin tones
+    .replace(/\u{200D}\p{Extended_Pictographic}/gu, '') // ZWJ + attached component
+}
+
 function formatWatts(w) {
   const abs = Math.abs(Number(w) || 0)
   if (abs >= 1000) return (abs / 1000).toFixed(2).replace('.', ',') + ' kW'
@@ -312,7 +322,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
           } else {
             parts.push(`<text x="${EV_X}" y="${y}" font-size="${FS.event}">${escapeXml(e.start_time)}</text>`)
           }
-          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncate(e.summary, 30))}</text>`)
+          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncate(simplifyEmoji(e.summary), 30))}</text>`)
         }
         y += ROW
       }
