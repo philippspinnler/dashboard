@@ -26,14 +26,16 @@ already tracks. Dashboard only — the e-ink panel is not changed.
 - A new pure helper in `lib/subscriptions.js` — `sumNetChange(subs, ids)` —
   sums `activations − cancellations` per product, reusing the existing
   phantom-row filter.
-- Response gains `subscriptions.weeklyChange` (integer, may be negative).
+- Response gains `subscriptions.weeklyChange: { yearly, monthly }` (integers,
+  may be negative).
 - Cache TTL stays 21 600 s.
 
 ### Widget (`components/widgets/WidgetEoGuide.vue`)
 
-- One new row in the existing metric grid, after „Monatlich", before the
-  rating row: label **„7 Tage"**, value formatted with an explicit sign —
-  `+3`, `−1`, `±0`.
+- (Revised after first review): no separate row. Each plan's 7-day net change
+  renders as a small muted suffix (`.metric-unit`) directly behind the
+  Jährlich / Monatlich counts — e.g. `26 +2`, `5 −1` (U+2212). A ±0 change
+  renders nothing, keeping the row quiet.
 
 ### Ancillary
 
