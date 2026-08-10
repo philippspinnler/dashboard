@@ -49,11 +49,13 @@ const batterySOC = computed(() => parseFloat(data.value?.battery_state_of_charge
 // kW with 1 decimal at >= 1000 W, else whole watts.
 const formatPower = (watts) => (watts >= 1000 ? `${(watts / 1000).toFixed(1)} kW` : `${Math.round(watts)} W`)
 
-// Split "405 W" -> { num, unit } so the unit can be dimmed.
+// Split "405 W" -> { num, unit } so the unit can be dimmed. The unit keeps an
+// NBSP, not a plain space: .metric-unit is an inline-block, and a leading
+// plain space would be trimmed as start-of-line whitespace.
 const split = (s) => {
   const str = String(s)
   const i = str.indexOf(' ')
-  return i < 0 ? { num: str, unit: '' } : { num: str.slice(0, i), unit: ' ' + str.slice(i + 1) }
+  return i < 0 ? { num: str, unit: '' } : { num: str.slice(0, i), unit: '\u00A0' + str.slice(i + 1) }
 }
 
 const pv = computed(() => split(formatPower(pvPower.value)))
