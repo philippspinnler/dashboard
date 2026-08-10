@@ -4,11 +4,11 @@
     <div class="metric-grid">
       <span class="metric-label">Innen</span>
       <HomeTemperatureIn class="metric-icon" :style="{ color: '#f97316' }" />
-      <span class="metric-value">{{ inside }}°<span class="metric-unit"></span></span>
+      <span class="metric-value">{{ inside }}<span class="metric-unit">&nbsp;°C</span></span>
 
       <span class="metric-label">Aussen</span>
       <HomeTemperatureOut class="metric-icon" :style="{ color: '#60a5fa' }" />
-      <span class="metric-value">{{ outside }}°<span class="metric-unit"></span></span>
+      <span class="metric-value">{{ outside }}<span class="metric-unit">&nbsp;°C</span></span>
 
       <span class="metric-label">CO2</span>
       <Wind class="metric-icon" :style="{ color: '#a3e635' }" />
