@@ -12,7 +12,7 @@
       <template v-if="outdoor !== null">
         <span class="metric-label">Außen</span>
         <span class="metric-icon"></span>
-        <span class="metric-value">{{ fmt(outdoor) }}<span class="metric-unit"></span></span>
+        <span class="metric-value">{{ outdoor.toFixed(1) }}<span class="metric-unit">&nbsp;°C</span></span>
       </template>
     </div>
   </div>
