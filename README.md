@@ -67,7 +67,7 @@ Placed into five screen regions (see [Layout & global](#layout--global)).
 | 🚗 Cars | `cars` | EV range, charge & status | Home Assistant |
 | ☀️ Inverter | `inverter` | Solar PV, grid, battery flow | Home Assistant |
 | 🔥 Heizung | `heizung` | Heat-pump state & temps | Home Assistant |
-| 📈 eo-guide | `eo-guide` | App store metrics | AppFigures |
+| 📈 eo-guide | `eo-guide` | App store metrics incl. 7-day subscriber trend | AppFigures |
 
 ### Overlays
 
@@ -365,6 +365,9 @@ yours differ (e.g. HK2 instead of HK1). State is *cooling* if cooling, else
 <details>
 <summary><strong>📈 eo-guide</strong> — AppFigures</summary>
 
+Shows active yearly/monthly subscriptions, the net subscriber change over the
+last 7 days, and the overall app store rating.
+
 | Variable | Description |
 | --- | --- |
 | `NUXT_EOGUIDE_CLIENT_KEY` | 🔒 AppFigures client key |
@@ -513,7 +516,7 @@ eink-display/           # PlatformIO firmware for the e-ink companion — see ei
 
 ## 🪶 E-ink companion
 
-A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, heat-pump status, and Netatmo temperatures in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). Each data section auto-hides when its source isn't configured, so the panel adapts to any setup. The display is rendered server-side and served as a 1-bit image frame:
+A companion ESP8266 + Waveshare 7.5" e-Paper display mirrors clock, today's weather, calendar, solar inverter, who's home, internet speed, heat-pump status, and Netatmo temperatures in black and white on a second, always-on screen — plus a warnings box that appears only when something needs attention (low battery, device problem, …). Each data section auto-hides when its source isn't configured, so the panel adapts to any setup. Emoji in calendar entries render as monochrome [Noto Emoji](https://fonts.google.com/noto/specimen/Noto+Emoji) glyphs. The display is rendered server-side and served as a 1-bit image frame:
 
 <div align="center">
   <img src="./docs/eink-companion.png" alt="E-ink companion screenshot" width="520">
