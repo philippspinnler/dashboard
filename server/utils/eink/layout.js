@@ -219,7 +219,7 @@ function weatherIcon(code, x, top, size) {
 
 export function buildScreenSvg({ time, date, days, inverter, presence, speedtest, warnings, heizung, netatmo, weather }) {
   const parts = []
-  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans">`)
+  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" font-family="DejaVu Sans, Noto Emoji">`)
   // Halftone pattern for "grey" text on the 1-bit panel: a 2x2 checkerboard
   // (2 black px per tile = 50% coverage) — darker than a 25% dither but still
   // clearly distinct from solid-black home names.
