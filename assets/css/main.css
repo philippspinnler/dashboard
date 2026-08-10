@@ -163,6 +163,17 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* Inside metric grids the unit hangs in a fixed-width, left-aligned gutter so
+   every big number shares one right edge across all sections. Unit-less rows
+   render an empty .metric-unit to reserve the same gutter. min-width fits the
+   widest unit (" Gbps" / " 16.1°"); a longer one degrades by nudging its own
+   number left instead of breaking the shared edge of the others. */
+.metric-grid .metric-unit {
+  display: inline-block;
+  min-width: 3.1em;
+  text-align: left;
+}
+
 .metric-sub {
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.6);

@@ -6,13 +6,13 @@
       <span class="metric-label">Jährlich</span>
       <span class="metric-icon"></span>
       <span class="metric-value"
-        >{{ yearly }}<span v-if="yearlyChange" class="metric-unit">&nbsp;{{ fmtChange(yearlyChange) }}</span></span
+        >{{ yearly }}<span class="metric-unit"><template v-if="yearlyChange">&nbsp;{{ fmtChange(yearlyChange) }}</template></span></span
       >
 
       <span class="metric-label">Monatlich</span>
       <span class="metric-icon"></span>
       <span class="metric-value"
-        >{{ monthly }}<span v-if="monthlyChange" class="metric-unit">&nbsp;{{ fmtChange(monthlyChange) }}</span></span
+        >{{ monthly }}<span class="metric-unit"><template v-if="monthlyChange">&nbsp;{{ fmtChange(monthlyChange) }}</template></span></span
       >
 
       <span class="metric-label stars" aria-label="Bewertung">
@@ -26,7 +26,7 @@
         </template>
       </span>
       <span class="metric-icon"></span>
-      <span class="metric-value">{{ overall_rating.toFixed(1) }}</span>
+      <span class="metric-value">{{ overall_rating.toFixed(1) }}<span class="metric-unit"></span></span>
     </div>
   </div>
 </template>
