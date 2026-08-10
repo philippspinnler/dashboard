@@ -11,6 +11,10 @@
       <span class="metric-icon"></span>
       <span class="metric-value">{{ monthly }}</span>
 
+      <span class="metric-label">7 Tage</span>
+      <span class="metric-icon"></span>
+      <span class="metric-value">{{ weeklyChangeLabel }}</span>
+
       <span class="metric-label stars" aria-label="Bewertung">
         <template v-for="(star, index) in starsArray" :key="index">
           <span v-if="star.type === 'half'" class="half-star">
@@ -35,6 +39,12 @@ const { data } = useWidgetData('/api/eo-guide', 21600000)
 
 const yearly = computed(() => data.value?.subscriptions?.yearly ?? 0)
 const monthly = computed(() => data.value?.subscriptions?.monthly ?? 0)
+const weeklyChangeLabel = computed(() => {
+  const n = data.value?.subscriptions?.weeklyChange ?? 0
+  if (n > 0) return `+${n}`
+  if (n < 0) return `−${-n}` // U+2212 minus, matches typographic style
+  return '±0'
+})
 const overall_rating = computed(() => data.value?.overall_rating ?? 0)
 
 // Generate stars array based on rating (rounded to nearest half)
