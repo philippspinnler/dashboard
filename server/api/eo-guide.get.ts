@@ -35,7 +35,7 @@ export default defineDashboardCachedHandler(
 
     let yearly = 0
     let monthly = 0
-    let weeklyChange = 0
+    const weeklyChange = { yearly: 0, monthly: 0 }
     const allIds = [...yearlyIds, ...monthlyIds]
     if (allIds.length) {
       const end = dayjs().tz(config.timezone || 'UTC')
@@ -57,7 +57,8 @@ export default defineDashboardCachedHandler(
       ])
       yearly = sumActiveSubscriptions(subs, yearlyIds)
       monthly = sumActiveSubscriptions(subs, monthlyIds)
-      weeklyChange = sumNetChange(weekSubs, allIds)
+      weeklyChange.yearly = sumNetChange(weekSubs, yearlyIds)
+      weeklyChange.monthly = sumNetChange(weekSubs, monthlyIds)
     }
 
     return {

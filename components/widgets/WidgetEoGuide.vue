@@ -5,15 +5,15 @@
     <div class="metric-grid">
       <span class="metric-label">Jährlich</span>
       <span class="metric-icon"></span>
-      <span class="metric-value">{{ yearly }}</span>
+      <span class="metric-value"
+        >{{ yearly }}<span v-if="yearlyChange" class="metric-unit">&nbsp;{{ fmtChange(yearlyChange) }}</span></span
+      >
 
       <span class="metric-label">Monatlich</span>
       <span class="metric-icon"></span>
-      <span class="metric-value">{{ monthly }}</span>
-
-      <span class="metric-label">7 Tage</span>
-      <span class="metric-icon"></span>
-      <span class="metric-value">{{ weeklyChangeLabel }}</span>
+      <span class="metric-value"
+        >{{ monthly }}<span v-if="monthlyChange" class="metric-unit">&nbsp;{{ fmtChange(monthlyChange) }}</span></span
+      >
 
       <span class="metric-label stars" aria-label="Bewertung">
         <template v-for="(star, index) in starsArray" :key="index">
@@ -39,12 +39,11 @@ const { data } = useWidgetData('/api/eo-guide', 21600000)
 
 const yearly = computed(() => data.value?.subscriptions?.yearly ?? 0)
 const monthly = computed(() => data.value?.subscriptions?.monthly ?? 0)
-const weeklyChangeLabel = computed(() => {
-  const n = data.value?.subscriptions?.weeklyChange ?? 0
-  if (n > 0) return `+${n}`
-  if (n < 0) return `−${-n}` // U+2212 minus, matches typographic style
-  return '±0'
-})
+// 7-day net change per plan, shown small behind the active count; a ±0 week
+// renders nothing to keep the row quiet.
+const yearlyChange = computed(() => data.value?.subscriptions?.weeklyChange?.yearly ?? 0)
+const monthlyChange = computed(() => data.value?.subscriptions?.weeklyChange?.monthly ?? 0)
+const fmtChange = (n) => (n > 0 ? `+${n}` : `−${-n}`) // U+2212 minus, matches typographic style
 const overall_rating = computed(() => data.value?.overall_rating ?? 0)
 
 // Generate stars array based on rating (rounded to nearest half)
