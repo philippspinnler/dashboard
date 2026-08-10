@@ -6,13 +6,13 @@
       <span class="metric-label">Status</span>
       <component :is="stateIcon" class="metric-icon" :style="{ color: stateColor }" />
       <span class="metric-value" :style="{ color: stateColor }"
-        >{{ stateLabel }}<span v-if="state !== 'idle' && flow !== null" class="metric-unit">&nbsp;{{ fmt(flow) }}</span></span
+        >{{ stateLabel }}<span class="metric-unit"><template v-if="state !== 'idle' && flow !== null">&nbsp;{{ fmt(flow) }}</template></span></span
       >
 
       <template v-if="outdoor !== null">
         <span class="metric-label">Außen</span>
         <span class="metric-icon"></span>
-        <span class="metric-value">{{ fmt(outdoor) }}</span>
+        <span class="metric-value">{{ fmt(outdoor) }}<span class="metric-unit"></span></span>
       </template>
     </div>
   </div>
