@@ -96,10 +96,13 @@ function batteryCompact(inv) {
   return ['Akku', value]
 }
 
-function eventLine(e) {
-  const prefix = e.all_day ? '·  ' : e.start_time + '  '
-  return prefix + truncate(e.summary, 30)
-}
+// Calendar event columns: the time (or, for all-day/special rows, a marker
+// icon) occupies EV_X..~86 ("09:00" in DejaVu 18 is ≈52px wide), and every
+// summary starts at the shared EV_TEXT_X so all rows align. Markers are
+// centred on the time column's midline (EV_MARK_CX).
+const EV_X = 34
+const EV_TEXT_X = 98
+const EV_MARK_CX = 60
 
 // Per-kind warning icons, mirroring the big dashboard's WarningsOverlay
 // (battery / droplet / wrench / warning triangle). Solid black fills with white
@@ -299,12 +302,17 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
         if (y > calBottom) break outer
         const sp = e.special_event
         if (sp) {
-          // Birthday → gift, anniversary → heart, then the name and (age/years).
-          parts.push(sp.type === 'anniversary' ? heartIcon(34, y - 15, 18) : giftIcon(34, y - 15, 18))
+          // Birthday → gift, anniversary → heart, sitting in the time column.
+          parts.push(sp.type === 'anniversary' ? heartIcon(EV_MARK_CX - 9, y - 15, 18) : giftIcon(EV_MARK_CX - 9, y - 15, 18))
           const label = sp.name + (sp.years != null ? ` (${sp.years})` : '')
-          parts.push(`<text x="60" y="${y}" font-size="${FS.event}">${escapeXml(truncate(label, 24))}</text>`)
+          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncate(label, 30))}</text>`)
         } else {
-          parts.push(`<text x="34" y="${y}" font-size="${FS.event}">${escapeXml(eventLine(e))}</text>`)
+          if (e.all_day) {
+            parts.push(`<text x="${EV_MARK_CX}" y="${y}" font-size="${FS.event}" text-anchor="middle">·</text>`)
+          } else {
+            parts.push(`<text x="${EV_X}" y="${y}" font-size="${FS.event}">${escapeXml(e.start_time)}</text>`)
+          }
+          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncate(e.summary, 30))}</text>`)
         }
         y += ROW
       }

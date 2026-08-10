@@ -95,6 +95,24 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('font-family="DejaVu Sans, Noto Emoji"')
   })
 
+  it('aligns all-day and special-event text with timed-event text', () => {
+    const alignDays = [
+      {
+        day: 'Heute',
+        date: '29. Juli',
+        events: [
+          { summary: 'Timed', start_time: '09:00', all_day: false },
+          { summary: 'Holiday', start_time: '00:00', all_day: true },
+          { special_event: { type: 'birthday', name: 'Max', years: 35 } },
+        ],
+      },
+    ]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: alignDays, inverter })
+    const xOf = (label) => Number(svg.match(new RegExp(`<text x="(\\d+)" y="\\d+"[^>]*>${label}`))[1])
+    expect(xOf('Holiday')).toBe(xOf('Timed'))
+    expect(xOf('Max')).toBe(xOf('Timed'))
+  })
+
   it('escapes XML special characters in event summaries', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
     expect(svg).toContain('Zoo &amp; Aquarium &lt;Besuch&gt;')
