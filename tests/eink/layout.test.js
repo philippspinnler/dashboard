@@ -173,6 +173,29 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('…')
   })
 
+  it('collapses ZWJ emoji sequences to their base emoji', () => {
+    // resvg's per-glyph font fallback can't shape a ZWJ cluster across fonts:
+    // 🚴‍♂️ assigned to DejaVu leaves the bike as tofu. Collapse to 🚴.
+    const zwjDays = [
+      {
+        day: 'Heute',
+        date: '29. Juli',
+        events: [
+          { summary: 'Biketraining 🚴‍♂️', start_time: '18:15', all_day: false },
+          { summary: 'Familie 👨‍👩‍👧', start_time: '19:00', all_day: false },
+          { summary: 'Nägel 💅🏼', start_time: '20:00', all_day: false },
+        ],
+      },
+    ]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: zwjDays, inverter })
+    expect(svg).toContain('Biketraining 🚴')
+    expect(svg).toContain('Familie 👨')
+    expect(svg).toContain('Nägel 💅')
+    expect(svg).not.toContain('‍') // no ZWJ survives
+    expect(svg).not.toContain('️') // no variation selector survives
+    expect(svg).not.toContain('🏼') // no skin-tone modifier survives
+  })
+
   it('truncates emoji without splitting surrogates', () => {
     const emojiSummary = '🎉'.repeat(40)
     const emojiDays = [
