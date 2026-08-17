@@ -379,12 +379,22 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
 
   if (hasHeizung) {
     const state = heizung.is_heating ? 'Heizt' : heizung.is_cooling ? 'Kühlt' : 'Aus'
-    const flow = heizung.flow_temperature
-    // status carries the Vorlauf temp in parens when active
-    const value = state !== 'Aus' && flow != null ? `${state} (${formatTemp(flow)})` : state
     parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Heizung</text>`)
     ry += HEADER_GAP
-    parts.push(metricLine(rx, ry, 'Status', value))
+    parts.push(metricLine(rx, ry, 'Status', state))
+    // Vorlauf + outdoor on their own line, shown regardless of state — the
+    // temps stay interesting even when the heat pump is off.
+    const temps = [
+      ['Vorlauf', heizung.flow_temperature],
+      ['Außen', heizung.outdoor],
+    ].filter(([, v]) => v != null)
+    if (temps.length) {
+      ry += ROW
+      const line = temps
+        .map(([label, v]) => `${label} <tspan font-weight="bold">${escapeXml(formatTemp(v))}</tspan>`)
+        .join('   ')
+      parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">${line}</text>`)
+    }
     ry += ROW + BLOCK_GAP
   }
 

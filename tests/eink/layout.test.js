@@ -314,26 +314,29 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('Hochzeitstag')
   })
 
-  it('shows heizung status with the Vorlauf temp in parens, and Netatmo temps separately', () => {
+  it('shows heizung status plus its temp line, and Netatmo temps separately', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, heizung, netatmo })
-    // status carries the flow temperature in parentheses when active
-    expect(svg).toContain('Heizt (32,4°)')
+    expect(svg).toContain('Status <tspan font-weight="bold">Heizt</tspan>')
+    // Vorlauf and the heat pump's outdoor temp get their own line
+    expect(svg).toContain('Vorlauf <tspan font-weight="bold">32,4°</tspan>')
+    expect(svg).toContain('Außen <tspan font-weight="bold">18,7°</tspan>')
     // Netatmo is its own section with inside/outside from netatmo
     expect(svg).toContain('Netatmo')
     expect(svg).toContain('Innen')
     expect(svg).toContain('21,5°') // netatmo indoor_temperature
-    expect(svg).toContain('Außen')
     expect(svg).toContain('14,2°') // netatmo outdoor_temperature
   })
 
-  it('shows the three heizung status states; no flow parens when off', () => {
+  it('shows the three heizung status states and keeps the temps when off', () => {
     const heat = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: true, is_cooling: false, flow_temperature: 30 } })
-    expect(heat).toContain('Heizt (30,0°)')
+    expect(heat).toContain('Status <tspan font-weight="bold">Heizt</tspan>')
     const cool = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: true, flow_temperature: 12 } })
-    expect(cool).toContain('Kühlt (12,0°)')
-    const off = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: false, flow_temperature: 20 } })
+    expect(cool).toContain('Status <tspan font-weight="bold">Kühlt</tspan>')
+    const off = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: false, flow_temperature: 20, outdoor: 15 } })
     expect(off).toContain('Status <tspan font-weight="bold">Aus</tspan>')
-    expect(off).not.toContain('(20,0°)') // no flow temp shown when off
+    // temps stay visible even when the heat pump is off
+    expect(off).toContain('Vorlauf <tspan font-weight="bold">20,0°</tspan>')
+    expect(off).toContain('Außen <tspan font-weight="bold">15,0°</tspan>')
   })
 
   it('renders the battery as text with no progress bar', () => {
