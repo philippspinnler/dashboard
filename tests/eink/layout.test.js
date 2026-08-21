@@ -278,6 +278,18 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('Noë (17)')
   })
 
+  it('keeps a long warning name plus detail inside the box', () => {
+    // Regression: "Sigen Plant Battery State of Cha… 22.7%" overflowed the
+    // border with the old 38-char budget.
+    const longWarn = {
+      warnings: [{ kind: 'battery', name: 'Sigen Plant Battery State of Charge', detail: '22.7%', severity: 'warning' }],
+    }
+    const svg = buildScreenSvg({ time: '1', date: 'x', days, inverter, warnings: longWarn })
+    // 35-char line budget: 30 for the name (29 chars + ellipsis), 5 for detail
+    expect(svg).toContain('Sigen Plant Battery State of …')
+    expect(svg).not.toContain('Sigen Plant Battery State of Cha')
+  })
+
   it('leaves clearance between the last warning line and the box border', () => {
     // 2 warnings → last baseline at top+68; the box must extend well past the
     // icon bottom (baseline+3) so it doesn't sit on the border: 38 + 2*22 = 82.

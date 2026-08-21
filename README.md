@@ -449,6 +449,7 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | Variable | Default | Description |
 | --- | --- | --- |
 | `NUXT_BATTERY_THRESHOLD` | `25` | Include batteries at/below this percentage |
+| `NUXT_WARNINGS_BATTERY_EXCLUDE` | _(built-in)_ | Comma-separated battery `entity_id`s to skip (e.g. a home-storage battery's SOC sensors) |
 | `NUXT_WARNINGS_PROBLEM_EXCLUDE` | _(built-in)_ | Comma-separated `binary_sensor.*` ids to suppress from the problem provider |
 | `NUXT_WARNINGS_LABELS_JSON` | _(built-in)_ | JSON map of `entity_id` → friendly name for problem sensors |
 | `NUXT_WARNINGS_WATCHLIST_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
