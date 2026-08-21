@@ -240,10 +240,9 @@ const DEFAULT_LABELS: Record<string, string> = {
 }
 const DEFAULT_EXCLUDE = 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid'
 // Battery sensors to skip: the Sigenergy home-storage battery reports its SOC
-// as device_class:battery (twice — plant + inverter), but a half-empty house
-// battery is normal operation and already visible in the Energie section.
-const DEFAULT_BATTERY_EXCLUDE =
-  'sensor.sigen_plant_battery_state_of_charge,sensor.sigen_inverter_battery_state_of_charge'
+// twice (plant + inverter, always identical). Keep the plant sensor so a low
+// storage battery still warns once; drop the inverter duplicate.
+const DEFAULT_BATTERY_EXCLUDE = 'sensor.sigen_inverter_battery_state_of_charge'
 // Humidity sensors to skip: the outdoor Terrasse sensor (a humid day outside is
 // not a warning). Heating-loop sensors like the Stiebel ISG aren't
 // device_class:humidity, so they're already excluded.
