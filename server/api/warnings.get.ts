@@ -70,10 +70,11 @@ function deviceName(friendly: string): string {
   return friendly.replace(/\s+(has\s+error|problem)$/i, '').trim() || friendly
 }
 
-function batteryWarnings(all: any[], threshold: number): Warning[] {
+function batteryWarnings(all: any[], threshold: number, exclude: Set<string>): Warning[] {
   return all
     .filter((e: any) => e?.attributes?.device_class === 'battery')
     .filter((e: any) => !String(e.entity_id || '').startsWith('binary_sensor.'))
+    .filter((e: any) => !exclude.has(e.entity_id))
     .map((e: any) => ({
       entity_id: e.entity_id as string,
       name: (e.attributes?.friendly_name || e.entity_id) as string,
@@ -86,7 +87,7 @@ function batteryWarnings(all: any[], threshold: number): Warning[] {
         id: e.entity_id,
         kind: 'battery',
         name: e.name,
-        detail: `${e.level}%`,
+        detail: `${Math.round(e.level)}%`,
         level: e.level,
         severity: 'warning',
       }),
@@ -238,6 +239,11 @@ const DEFAULT_LABELS: Record<string, string> = {
   'binary_sensor.s8_maxv_ultra_water_shortage': 'Staubsauger Wassermangel',
 }
 const DEFAULT_EXCLUDE = 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid'
+// Battery sensors to skip: the Sigenergy home-storage battery reports its SOC
+// as device_class:battery (twice — plant + inverter), but a half-empty house
+// battery is normal operation and already visible in the Energie section.
+const DEFAULT_BATTERY_EXCLUDE =
+  'sensor.sigen_plant_battery_state_of_charge,sensor.sigen_inverter_battery_state_of_charge'
 // Humidity sensors to skip: the outdoor Terrasse sensor (a humid day outside is
 // not a warning). Heating-loop sensors like the Stiebel ISG aren't
 // device_class:humidity, so they're already excluded.
@@ -254,6 +260,12 @@ export default defineDashboardCachedHandler(
 
     const config = useRuntimeConfig(event)
     const threshold = Number(config.batteryThreshold) || 25
+    const batteryExclude = new Set(
+      envOr(config.warningsBatteryExclude, DEFAULT_BATTERY_EXCLUDE)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    )
     const exclude = new Set(
       envOr(config.warningsProblemExclude, DEFAULT_EXCLUDE)
         .split(',')
@@ -285,7 +297,7 @@ export default defineDashboardCachedHandler(
     ])
 
     const warnings: Warning[] = [
-      ...batteryWarnings(all, threshold),
+      ...batteryWarnings(all, threshold, batteryExclude),
       ...problemWarnings(all, exclude, labels),
       ...watchWarnings(all, watchlist),
       ...humidity,

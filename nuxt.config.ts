@@ -63,6 +63,7 @@ export default defineNuxtConfig({
     // leaving these empty (or unset in prod) keeps those built-in defaults, so an
     // empty value passed by Docker Compose never wipes the config.
     batteryThreshold: '25',
+    warningsBatteryExclude: '',
     warningsProblemExclude: '',
     warningsLabelsJson: '',
     warningsWatchlistJson: '',

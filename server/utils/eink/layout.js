@@ -408,10 +408,11 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     let wy = warnTop + 46
     for (const w of shownWarns) {
       // dashboard style: kind icon, then name, then the value in bold. Truncate
-      // the name (not the whole line) so the detail always stays visible.
+      // the name (not the whole line) so the detail always stays visible. The
+      // 35-char budget keeps a worst-case wide line inside the box border.
       parts.push(warnIcon(w.kind, 40, wy - 12, 15))
       const detail = w.detail ? String(w.detail) : ''
-      const name = truncate(w.name, detail ? 38 - [...detail].length : 38)
+      const name = truncate(w.name, detail ? 35 - [...detail].length : 35)
       const detailSpan = detail ? ` <tspan font-weight="bold">${escapeXml(detail)}</tspan>` : ''
       parts.push(`<text x="62" y="${wy}" font-size="${FS.warn}">${escapeXml(name)}${detailSpan}</text>`)
       wy += 22
