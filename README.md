@@ -454,7 +454,7 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | `NUXT_WARNINGS_LABELS_JSON` | _(built-in)_ | JSON map of `entity_id` → friendly name for problem sensors |
 | `NUXT_WARNINGS_WATCHLIST_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
 | `NUXT_HUMIDITY_THRESHOLD` | `60` | Warn on humidity sensors above this percentage |
-| `NUXT_HUMIDITY_EXCLUDE` | _(built-in)_ | Comma-separated humidity `entity_id`s to skip (default: the outdoor sensor) |
+| `NUXT_HUMIDITY_EXCLUDE` | _(built-in)_ | Comma-separated humidity `entity_id`s to skip (default: the outdoor sensor and a heat-pump loop sensor that shares a room with a real sensor) |
 | `NUXT_MAINTENANCE_THRESHOLD` | `1` | Warn on consumable `*_time_left` sensors at/below this many hours |
 | `NUXT_WARNINGS_MAINTENANCE_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, detail? }` consumables to watch |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |

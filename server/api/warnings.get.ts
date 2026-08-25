@@ -244,9 +244,11 @@ const DEFAULT_EXCLUDE = 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid'
 // storage battery still warns once; drop the inverter duplicate.
 const DEFAULT_BATTERY_EXCLUDE = 'sensor.sigen_inverter_battery_state_of_charge'
 // Humidity sensors to skip: the outdoor Terrasse sensor (a humid day outside is
-// not a warning). Heating-loop sensors like the Stiebel ISG aren't
-// device_class:humidity, so they're already excluded.
-const DEFAULT_HUMIDITY_EXCLUDE = 'sensor.terrasse_netatmo_terrasse_humidity'
+// not a warning), and the Stiebel ISG "Humidity HK 2" sensor — it IS
+// device_class:humidity and sits in the Technikraum area, so it duplicated the
+// Technikraum Luftsensor row whenever both crossed the threshold.
+const DEFAULT_HUMIDITY_EXCLUDE =
+  'sensor.terrasse_netatmo_terrasse_humidity,sensor.stiebel_eltron_isg_humidity_hk_2'
 
 // Env value if provided (non-empty after trim), else the built-in default.
 function envOr(value: unknown, fallback: string): string {
