@@ -62,11 +62,11 @@ describe('buildScreenSvg', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch, 29. Juli', days, inverter, weather, presence })
     expect(svg).toContain('class="wx"') // weather icon present
     // high (20°) sits above low (12°) — separate stacked lines to the left
-    expect(svg).toMatch(/<text [^>]*x="692" y="42"[^>]*text-anchor="end"[^>]*>20°<\/text>/) // high on top
-    expect(svg).toMatch(/<text [^>]*x="692" y="72"[^>]*text-anchor="end"[^>]*>12°<\/text>/) // low below
+    expect(svg).toMatch(/<text x="692" y="42"[^>]*text-anchor="end"[^>]*>20°<\/text>/) // high on top
+    expect(svg).toMatch(/<text x="692" y="72"[^>]*text-anchor="end"[^>]*>12°<\/text>/) // low below
     // date centred above the people row
-    expect(svg).toMatch(/<text [^>]*x="\d+" y="40"[^>]*text-anchor="middle"[^>]*>Mittwoch, 29\. Juli<\/text>/)
-    expect(svg).toMatch(/<text [^>]*x="\d+" y="70"[^>]*text-anchor="middle"[^>]*><tspan/)
+    expect(svg).toMatch(/<text x="\d+" y="40"[^>]*text-anchor="middle"[^>]*>Mittwoch, 29\. Juli<\/text>/)
+    expect(svg).toMatch(/<text x="\d+" y="70"[^>]*text-anchor="middle"[^>]*><tspan/)
   })
 
   it('centres the date when weather is unavailable', () => {
@@ -108,7 +108,7 @@ describe('buildScreenSvg', () => {
       },
     ]
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: alignDays, inverter })
-    const xOf = (label) => Number(svg.match(new RegExp(`<text [^>]*?x="(\\d+)" y="\\d+"[^>]*>${label}`))[1])
+    const xOf = (label) => Number(svg.match(new RegExp(`<text x="(\\d+)" y="\\d+"[^>]*>${label}`))[1])
     expect(xOf('Holiday')).toBe(xOf('Timed'))
     expect(xOf('Max')).toBe(xOf('Timed'))
   })
@@ -220,7 +220,7 @@ describe('buildScreenSvg', () => {
     expect(svg).toMatch(/<tspan>Philipp<\/tspan>/)
     expect(svg).toMatch(/<tspan>\s+Anna<\/tspan>/)
     // away name in a grey-filled tspan
-    expect(svg).toMatch(/<tspan fill="url\(#grey\)"[^>]*>\s*Max<\/tspan>/)
+    expect(svg).toMatch(/<tspan fill="url\(#grey\)">\s*Max<\/tspan>/)
     // no "Zuhause" label anymore
     expect(svg).not.toContain('Zuhause')
   })
@@ -344,7 +344,7 @@ describe('buildScreenSvg', () => {
     const cool = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: true, flow_temperature: 12 } })
     expect(cool).toContain('Kühlt (12,0°)')
     const off = buildScreenSvg({ time: '1', date: 'x', days, inverter, heizung: { is_heating: false, is_cooling: false, flow_temperature: 20 } })
-    expect(off).toMatch(/Status <tspan font-weight="bold"[^>]*>Aus<\/tspan>/)
+    expect(off).toContain('Status <tspan font-weight="bold">Aus</tspan>')
     expect(off).not.toContain('(20,0°)') // no flow temp shown when off
   })
 
@@ -353,28 +353,6 @@ describe('buildScreenSvg', () => {
     expect(svg).toContain('49 %')
     // the old SOC bar used a filled rect of height 12 — it must be gone
     expect(svg).not.toMatch(/<rect[^>]*height="12"/)
-  })
-
-  it('fattens regular text with a hairline stroke (synthetic semibold)', () => {
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
-    // regular-weight text (event lines, metric labels) carries the stroke
-    expect(svg).toMatch(/<text stroke="black" stroke-width="0\.8"[^>]*>Team Meeting/)
-    expect(svg).toMatch(/<text stroke="black" stroke-width="0\.8"[^>]*font-size="22"/) // date line
-  })
-
-  it('excludes bold text from the synthetic-semibold stroke', () => {
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
-    // bold is already solid; stroking it clogs counters. Every bold element
-    // must carry stroke="none", and no tag may combine bold with the stroke.
-    expect(svg).not.toMatch(/font-weight="bold"(?! stroke="none")/)
-    expect(svg).not.toMatch(/<text[^>]*stroke="black"[^>]*font-weight="bold"/)
-  })
-
-  it('excludes grey (halftone) away names from the stroke', () => {
-    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, presence })
-    // a black stroke around pattern-filled text would rim "away" names in
-    // solid black and destroy the grey reading
-    expect(svg).toMatch(/<tspan fill="url\(#grey\)" stroke="none">\s*Max<\/tspan>/)
   })
 
   it('keeps every drawn element within the 800x480 canvas', () => {
