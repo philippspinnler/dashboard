@@ -29,6 +29,22 @@ const HEADER_GAP = 28 // section/day header baseline → its first line
 const ROW = 27 // line → line within a block
 const BLOCK_GAP = 14 // extra gap after a block
 
+// Synthetic semibold for the 1-bit panel: resvg renders unhinted outlines, so
+// regular DejaVu at 16–22px quantises to ragged, uneven 2px stems. A hairline
+// stroke fattens every glyph edge evenly and survives thresholding as solid
+// stems (verified against a bold/threshold/no-AA probe matrix — weight was the
+// only lever that visibly helped). Bold text is excluded: it is already solid,
+// and stroking clogs its counters. Grey (halftone) text is excluded so away
+// names keep reading grey instead of gaining a black rim.
+const TEXT_STROKE_WIDTH = 0.8
+
+function applyTextStroke(svg) {
+  return svg
+    .replaceAll('font-weight="bold"', 'font-weight="bold" stroke="none"')
+    .replaceAll('fill="url(#grey)"', 'fill="url(#grey)" stroke="none"')
+    .replace(/<text (?![^>]*stroke=)/g, `<text stroke="black" stroke-width="${TEXT_STROKE_WIDTH}" `)
+}
+
 // Font sizes in one place — the readable/compact tradeoff lives here.
 const FS = {
   clock: 64,
@@ -423,5 +439,5 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   }
 
   parts.push('</svg>')
-  return parts.join('\n')
+  return applyTextStroke(parts.join('\n'))
 }
