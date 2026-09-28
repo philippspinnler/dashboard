@@ -67,6 +67,28 @@ function truncate(s, max) {
   return chars.length <= max ? String(s) : chars.slice(0, max - 1).join('') + '…'
 }
 
+// DejaVu Sans advance widths for ASCII 32..126, in 1/100 em (measured via resvg).
+// Accented letters use their base letter; anything else (emoji, ellipsis) = 1 em.
+const DEJAVU_W = [
+  32, 40, 46, 84, 64, 95, 78, 27, 39, 39, 50, 84, 32, 36, 30, 34, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 34, 34,
+  84, 84, 84, 53, 100, 68, 69, 70, 77, 63, 58, 77, 75, 29, 29, 66, 56, 86, 75, 79, 60, 79, 69, 63, 61, 73, 68, 99,
+  69, 61, 69, 39, 34, 39, 84, 50, 50, 61, 63, 55, 63, 62, 35, 63, 63, 28, 28, 58, 28, 97, 63, 61, 63, 63, 41, 52,
+  39, 63, 59, 82, 59, 59, 52, 64, 34, 64, 84,
+]
+const charW = (ch) => DEJAVU_W[ch.normalize('NFD').charCodeAt(0) - 32] ?? 100
+
+// Pixel-width truncation for proportional text: a char budget lets wide
+// letters (m, W, C) run past the column divider.
+function truncateToWidth(s, maxPx, fontSize) {
+  const chars = [...String(s)]
+  const max = (maxPx * 100) / fontSize
+  let w = chars.reduce((sum, ch) => sum + charW(ch), 0)
+  if (w <= max) return String(s)
+  w += charW('…')
+  while (chars.length && w > max) w -= charW(chars.pop())
+  return chars.join('') + '…'
+}
+
 // Collapse multi-codepoint emoji to their base pictograph (🚴‍♂️ → 🚴,
 // 👨‍👩‍👧 → 👨, 💅🏼 → 💅). resvg's font fallback is per-glyph, so a ZWJ
 // cluster assigned to DejaVu renders its emoji part as tofu instead of
@@ -113,6 +135,7 @@ function batteryCompact(inv) {
 const EV_X = 34
 const EV_TEXT_X = 98
 const EV_MARK_CX = 60
+const EV_TEXT_MAX_W = DIVIDER_X - 8 - EV_TEXT_X // keep clear of the divider
 
 // Per-kind warning icons, mirroring the big dashboard's WarningsOverlay
 // (battery / droplet / wrench / warning triangle). Solid black fills with white
@@ -315,14 +338,14 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
           // Birthday → gift, anniversary → heart, sitting in the time column.
           parts.push(sp.type === 'anniversary' ? heartIcon(EV_MARK_CX - 9, y - 15, 18) : giftIcon(EV_MARK_CX - 9, y - 15, 18))
           const label = sp.name + (sp.years != null ? ` (${sp.years})` : '')
-          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncate(label, 30))}</text>`)
+          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncateToWidth(label, EV_TEXT_MAX_W, FS.event))}</text>`)
         } else {
           if (e.all_day) {
             parts.push(`<text x="${EV_MARK_CX}" y="${y}" font-size="${FS.event}" text-anchor="middle">·</text>`)
           } else {
             parts.push(`<text x="${EV_X}" y="${y}" font-size="${FS.event}">${escapeXml(e.start_time)}</text>`)
           }
-          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncate(simplifyEmoji(e.summary), 30))}</text>`)
+          parts.push(`<text x="${EV_TEXT_X}" y="${y}" font-size="${FS.event}">${escapeXml(truncateToWidth(simplifyEmoji(e.summary), EV_TEXT_MAX_W, FS.event))}</text>`)
         }
         y += ROW
       }
