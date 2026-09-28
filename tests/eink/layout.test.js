@@ -208,8 +208,18 @@ describe('buildScreenSvg', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days: emojiDays, inverter })
     // Must not contain lone surrogates (U+FFFD replacement character)
     expect(svg).not.toContain('�')
-    // Must contain truncated emoji plus ellipsis (29 emoji + '…', limit 30)
-    expect(svg).toContain('🎉'.repeat(29) + '…')
+    // Width budget 294px at 18px, emoji = 1em: 15 emoji + '…' = 288px
+    expect(svg).toContain('>' + '🎉'.repeat(15) + '…<')
+  })
+
+  it('truncates by pixel width so wide letters stay left of the divider', () => {
+    const days = [{ day: 'Samstag', date: '03. Oktober', events: [
+      { summary: 'Camping Urlaub Marina de Venezia', all_day: true },
+      { summary: 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii', start_time: '09:00', all_day: false },
+    ] }]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter })
+    expect(svg).toContain('>Camping Urlaub Marina de Ve…<') // advance-width sum over 294px budget
+    expect(svg).toContain('>iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii<') // narrow text isn't cut at 30 chars
   })
 
   it('renders presence as a centred row: home black, away grey, no label', () => {
