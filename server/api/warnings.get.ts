@@ -239,10 +239,11 @@ const DEFAULT_LABELS: Record<string, string> = {
   'binary_sensor.s8_maxv_ultra_water_shortage': 'Staubsauger Wassermangel',
 }
 const DEFAULT_EXCLUDE = 'binary_sensor.s8_maxv_ultra_dock_cleaning_fluid'
-// Battery sensors to skip: the Sigenergy home-storage battery reports its SOC
-// twice (plant + inverter, always identical). Keep the plant sensor so a low
-// storage battery still warns once; drop the inverter duplicate.
-const DEFAULT_BATTERY_EXCLUDE = 'sensor.sigen_inverter_battery_state_of_charge'
+// Battery sensors to skip: the Sigenergy home-storage battery (plant + inverter
+// SOC). It drains below the threshold every night — that's normal operation, not
+// a battery to replace — and the inverter widget already shows its charge.
+const DEFAULT_BATTERY_EXCLUDE =
+  'sensor.sigen_plant_battery_state_of_charge,sensor.sigen_inverter_battery_state_of_charge'
 // Humidity sensors to skip: the outdoor Terrasse sensor (a humid day outside is
 // not a warning), and the Stiebel ISG "Humidity HK 2" sensor — it IS
 // device_class:humidity and sits in the Technikraum area, so it duplicated the
