@@ -399,7 +399,10 @@ state is shown. The TV/HDMI eARC input shows a TV icon instead of album art.
 <summary><strong>🔔 Doorbell</strong></summary>
 
 Shows a live camera feed when the doorbell is pressed (e.g. a UniFi Protect
-doorbell exposed through Home Assistant).
+doorbell exposed through Home Assistant). The feed plays over WebRTC via Home
+Assistant's built-in go2rtc (full frame rate); if that fails it falls back to
+HA's MJPEG proxy (~2 fps). WebRTC media flows directly between HA and the
+kiosk browser, so the kiosk must be able to reach HA on the LAN.
 
 | Variable | Default | Description |
 | --- | --- | --- |
