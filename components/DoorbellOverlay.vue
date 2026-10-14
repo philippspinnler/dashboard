@@ -7,14 +7,80 @@
           {{ friendlyName }}
         </span>
       </div>
-      <!-- src only set while visible so the proxied stream connection closes on dismiss -->
-      <img class="doorbell-video" :src="visible ? '/api/doorbell/stream' : ''" alt="Doorbell camera" />
+      <!-- WebRTC (30 fps) via HA's go2rtc; MJPEG proxy (~2 fps) only if that fails.
+           src only set while visible so the proxied stream connection closes on dismiss -->
+      <img v-if="fallback" class="doorbell-video" :src="'/api/doorbell/stream'" alt="Doorbell camera" />
+      <video v-else ref="videoEl" class="doorbell-video" autoplay muted playsinline />
     </div>
   </Transition>
 </template>
 
 <script setup>
 const { visible, friendlyName, dismiss } = useDoorbell()
+
+const videoEl = ref(null)
+const fallback = ref(false)
+let pc = null
+let abort = null
+
+function stop() {
+  abort?.abort()
+  pc?.close()
+  pc = abort = null
+}
+
+async function start() {
+  stop()
+  fallback.value = false
+  const ctrl = (abort = new AbortController())
+  const conn = (pc = new RTCPeerConnection())
+  conn.addTransceiver('video', { direction: 'recvonly' })
+  conn.ontrack = (e) => {
+    if (videoEl.value) videoEl.value.srcObject = e.streams[0]
+  }
+  try {
+    await conn.setLocalDescription(await conn.createOffer())
+    // Send the offer with all (LAN host) candidates baked in — no upstream trickle.
+    if (conn.iceGatheringState !== 'complete') {
+      await new Promise((resolve) => {
+        conn.onicegatheringstatechange = () => conn.iceGatheringState === 'complete' && resolve()
+        setTimeout(resolve, 2000)
+      })
+    }
+    const res = await fetch('/api/doorbell/webrtc', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ offer: conn.localDescription.sdp }),
+      signal: ctrl.signal,
+    })
+    if (!res.ok) throw new Error(`signaling ${res.status}`)
+    // Response stays open for the video's lifetime (see webrtc.post.ts).
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+    let buf = ''
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buf += value
+      const lines = buf.split('\n')
+      buf = lines.pop()
+      for (const line of lines.filter(Boolean)) {
+        const msg = JSON.parse(line)
+        if (msg.type === 'answer') await conn.setRemoteDescription({ type: 'answer', sdp: msg.answer })
+        else if (msg.type === 'candidate') await conn.addIceCandidate(msg.candidate)
+        else if (msg.type === 'error') throw new Error(msg.message)
+      }
+    }
+  } catch (err) {
+    if (ctrl.signal.aborted) return // dismissed
+    console.warn('[doorbell] WebRTC failed, falling back to MJPEG:', err)
+    stop()
+    fallback.value = true
+  }
+}
+
+watch(visible, (v) => (v ? nextTick(start) : stop()))
+onMounted(() => visible.value && nextTick(start))
+onBeforeUnmount(stop)
 </script>
 
 <style scoped>
