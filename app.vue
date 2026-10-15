@@ -1,6 +1,12 @@
 <template>
-  <div class="app-root" :style="{ backgroundImage: image ? `url(${image})` : 'none' }">
-    <!-- Dims the photo; opacity is GPU-composited, so the fade stays smooth on the Pi -->
+  <div class="app-root">
+    <div
+      v-for="(url, i) in layers"
+      :key="i"
+      class="photo-layer"
+      :style="{ backgroundImage: url ? `url(${url})` : 'none', opacity: i === front ? 1 : 0 }"
+    />
+    <!-- Dims the photo; opacity is GPU-composited, so fades stay smooth on the Pi -->
     <div class="photo-dim" :style="{ opacity: dim }" />
     <div class="container">
       <div class="container-top">
@@ -97,70 +103,53 @@ const widgetComponents = {
   heizung: WidgetHeizung,
 }
 
-const image = ref(null)
-const previousImage = ref(null)
-const dim = ref(1) // black overlay opacity: 1 = photo hidden, 0.5 = resting dim
+// Two stacked photo layers: the new photo goes into the hidden one, then the
+// layers swap opacity, so photos crossfade directly (no black in between).
+const layers = ref([null, null])
+const front = ref(0)
+const dim = ref(1) // black overlay opacity: 1 = black until the first photo, 0.5 = resting dim
 const PHOTO_INTERVAL_MS = (Number(useRuntimeConfig().public.photoIntervalSeconds) || 300) * 1000
 const photoCycle = ref(0) // bumped on each change to restart the progress line
-const FADE_MS = 600 // keep in sync with .photo-dim transition in main.css
 
-const preloadImage = (url) =>
-  new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(url)
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
-    img.src = url
-  })
+// decode() up front so the Pi doesn't decode the 4K photo mid-fade (rejects on load errors too)
+const preloadImage = async (url) => {
+  const img = new Image()
+  img.src = url
+  await img.decode()
+}
 
-const getImages = async () => {
+const showImage = (url) => {
+  const back = 1 - front.value
+  layers.value[back] = url
+  front.value = back
+  dim.value = 0.5
+}
+
+const nextImage = async () => {
   try {
     const data = await $fetch('/api/album')
-    if (data && data.images && data.images.length > 0) {
-      const shuffledImages = [...data.images].sort(() => Math.random() - 0.5)
-      for (const imageUrl of shuffledImages) {
-        try {
-          await preloadImage(imageUrl)
-          previousImage.value = image.value
-          image.value = imageUrl
-          return true
-        } catch (error) {
-          console.warn('Failed to load image, trying next:', error.message)
-        }
+    const shuffled = [...(data?.images || [])].sort(() => Math.random() - 0.5)
+    for (const url of shuffled) {
+      try {
+        await preloadImage(url)
+        showImage(url)
+        return
+      } catch (error) {
+        console.warn('Failed to load image, trying next:', url, error.message)
       }
-      if (previousImage.value) image.value = previousImage.value
-      return false
     }
-    return false
-  } catch (error) {
-    if (previousImage.value) image.value = previousImage.value
-    return false
+  } catch {
+    // album unreachable: keep the current photo, retry next tick
   }
-}
-
-const wait = (ms) => new Promise((r) => setTimeout(r, ms))
-
-const fadeToBlack = async () => {
-  dim.value = 1
-  await wait(FADE_MS)
-}
-
-const fadeToTransparent = async () => {
-  await wait(1000)
-  dim.value = 0.5
-  await wait(FADE_MS)
 }
 
 let intervalId = null
 onMounted(async () => {
-  const initialLoad = await getImages()
-  if (initialLoad) await fadeToTransparent()
-
+  await nextImage()
   photoCycle.value++
-  intervalId = setInterval(async () => {
+  intervalId = setInterval(() => {
     photoCycle.value++
-    await fadeToBlack()
-    const loaded = await getImages()
-    if (loaded || image.value) await fadeToTransparent()
+    nextImage()
   }, PHOTO_INTERVAL_MS)
 })
 onBeforeUnmount(() => {
