@@ -1,6 +1,8 @@
 <template>
   <div class="app-root" :style="{ backgroundImage: image ? `url(${image})` : 'none' }">
-    <div class="container" :style="{ backgroundColor }">
+    <!-- Dims the photo; opacity is GPU-composited, so the fade stays smooth on the Pi -->
+    <div class="photo-dim" :style="{ opacity: dim }" />
+    <div class="container">
       <div class="container-top">
         <div class="container-top-left">
           <div
@@ -56,6 +58,8 @@
         </div>
       </div>
     </div>
+    <!-- Hairline at the bottom edge that fills up until the next photo change -->
+    <div :key="photoCycle" class="photo-progress" :style="{ animationDuration: `${PHOTO_INTERVAL_MS}ms` }" />
     <DoorbellOverlay />
     <SonosOverlay />
     <WarningsOverlay />
@@ -95,9 +99,10 @@ const widgetComponents = {
 
 const image = ref(null)
 const previousImage = ref(null)
-const backgroundColor = ref('rgba(0, 0, 0, 1)')
-
-const transitionStepSpeed = 50
+const dim = ref(1) // black overlay opacity: 1 = photo hidden, 0.5 = resting dim
+const PHOTO_INTERVAL_MS = 5 * 60 * 1000
+const photoCycle = ref(0) // bumped on each change to restart the progress line
+const FADE_MS = 600 // keep in sync with .photo-dim transition in main.css
 
 const preloadImage = (url) =>
   new Promise((resolve, reject) => {
@@ -132,19 +137,17 @@ const getImages = async () => {
   }
 }
 
+const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+
 const fadeToBlack = async () => {
-  for (let x = 0.55; x <= 1.05; x += 0.05) {
-    backgroundColor.value = `rgba(0, 0, 0, ${x})`
-    await new Promise((r) => setTimeout(r, transitionStepSpeed))
-  }
+  dim.value = 1
+  await wait(FADE_MS)
 }
 
 const fadeToTransparent = async () => {
-  await new Promise((r) => setTimeout(r, 1000))
-  for (let x = 0.9; x >= 0.5; x -= 0.05) {
-    backgroundColor.value = `rgba(0, 0, 0, ${x})`
-    await new Promise((r) => setTimeout(r, transitionStepSpeed))
-  }
+  await wait(1000)
+  dim.value = 0.5
+  await wait(FADE_MS)
 }
 
 let intervalId = null
@@ -152,11 +155,13 @@ onMounted(async () => {
   const initialLoad = await getImages()
   if (initialLoad) await fadeToTransparent()
 
+  photoCycle.value++
   intervalId = setInterval(async () => {
+    photoCycle.value++
     await fadeToBlack()
     const loaded = await getImages()
     if (loaded || image.value) await fadeToTransparent()
-  }, 5 * 1000 * 60)
+  }, PHOTO_INTERVAL_MS)
 })
 onBeforeUnmount(() => {
   if (intervalId) clearInterval(intervalId)
