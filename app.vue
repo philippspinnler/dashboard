@@ -100,7 +100,7 @@ const widgetComponents = {
 const image = ref(null)
 const previousImage = ref(null)
 const dim = ref(1) // black overlay opacity: 1 = photo hidden, 0.5 = resting dim
-const PHOTO_INTERVAL_MS = 10 * 1000 // TEMP: fade testing on the Pi; restore 5 * 60 * 1000
+const PHOTO_INTERVAL_MS = (Number(useRuntimeConfig().public.photoIntervalSeconds) || 300) * 1000
 const photoCycle = ref(0) // bumped on each change to restart the progress line
 const FADE_MS = 600 // keep in sync with .photo-dim transition in main.css
 

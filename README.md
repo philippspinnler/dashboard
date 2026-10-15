@@ -482,6 +482,7 @@ A rotating background slideshow from a shared album.
 | `NUXT_IMMICH_SHARE_KEY` | _(empty)_ | Immich shared-link key |
 | `NUXT_IMMICH_ALBUM_NAME` | _(empty)_ | Immich album name |
 | `NUXT_IMMICH_C` | _(empty)_ | 🔒 Immich shared-link password (if set) |
+| `NUXT_PUBLIC_PHOTO_INTERVAL_SECONDS` | `300` | Seconds each photo stays up; a thin line at the bottom edge shows progress to the next one |
 
 ---
 

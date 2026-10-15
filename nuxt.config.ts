@@ -135,6 +135,7 @@ export default defineNuxtConfig({
       widgetsBottom: 'weather',
       enableGlassmorphism: 'false',
       useMockData: 'false',
+      photoIntervalSeconds: '300', // how long each background photo stays up
 
       // Doorbell overlay: show the live G6 Entry feed top-right on a ring.
       doorbellEnabled: 'false',
