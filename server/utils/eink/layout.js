@@ -396,7 +396,7 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
     const up = speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
     parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Internet</text>`)
     ry += HEADER_GAP
-    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">↓ <tspan font-weight="bold">${escapeXml(down)}</tspan>   ↑ <tspan font-weight="bold">${escapeXml(up)}</tspan></text>`)
+    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">↓ ${escapeXml(down)}   ↑ ${escapeXml(up)}</text>`)
     ry += ROW + BLOCK_GAP
   }
 
