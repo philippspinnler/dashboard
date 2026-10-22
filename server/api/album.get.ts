@@ -11,8 +11,14 @@ async function immichImages(config: any): Promise<string[]> {
   const album = albums.find((a: any) => a.albumName === config.immichAlbumName)
   if (!album) throw new Error(`Album '${config.immichAlbumName}' not found`)
 
-  const detail: any = await $fetch(`${base}/api/albums/${album.id}`, { headers })
-  const assets = detail.assets || []
+  // Immich 3 dropped `assets` from GET /api/albums/:id; list them via search instead.
+  // ponytail: single page of 1000 (Immich's max) — follow assets.nextPage if the album outgrows it
+  const res: any = await $fetch(`${base}/api/search/metadata`, {
+    method: 'POST',
+    headers,
+    body: { albumIds: [album.id], type: 'IMAGE', size: 1000 },
+  })
+  const assets = res.assets?.items || []
   // c/share_key are already URL-encoded in config — embed as-is (don't re-encode).
   return assets.map(
     (asset: any) =>
