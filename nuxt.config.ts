@@ -74,6 +74,9 @@ export default defineNuxtConfig({
     // from Docker Compose keeps it.
     humidityThreshold: '60', // NUXT_HUMIDITY_THRESHOLD
     humidityExclude: '', // NUXT_HUMIDITY_EXCLUDE
+    // Optional JSON map { humidity sensor id: fan/switch id }: while the mapped
+    // entity is on, that room's humidity row reads "71% (Lüfter läuft)".
+    humidityFansJson: '', // NUXT_HUMIDITY_FANS_JSON
 
     // Maintenance provider: warn on configured vacuum consumable "*_time_left"
     // (hours) sensors at/below maintenanceThreshold. The per-home default list

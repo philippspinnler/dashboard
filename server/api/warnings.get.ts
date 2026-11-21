@@ -9,7 +9,9 @@
 //   watch       — configured enum/state sensors whose state isn't in `okStates`
 //                 (e.g. the vacuum dock error, where `none` means healthy)
 //   humidity    — device_class:humidity sensors above humidityThreshold, named by
-//                 the room (HA area) they sit in, not the device
+//                 the room (HA area) they sit in, not the device; a row is
+//                 tagged "(Lüfter läuft)" while the fan mapped to that sensor
+//                 in humidityFansJson is `on`
 //   maintenance — configured consumable `*_time_left` (hours) sensors at/below
 //                 maintenanceThreshold (e.g. the vacuum filter/brushes/strainer)
 //
@@ -50,6 +52,8 @@ type MaintenanceEntry = {
 const UNKNOWN = new Set(['unknown', 'unavailable', ''])
 
 function parseJson<T>(raw: unknown, fallback: T): T {
+  // Nuxt already parses JSON-looking NUXT_* env values into objects.
+  if (raw && typeof raw === 'object') return raw as T
   if (typeof raw !== 'string' || raw.trim() === '') return fallback
   try {
     return JSON.parse(raw) as T
@@ -297,6 +301,14 @@ export default defineDashboardCachedHandler(
       haAllStates(event),
       humidityWarnings(event, humidityThreshold, humidityExclude),
     ])
+
+    // Optional: { humidity sensor id: fan/switch id }. While the mapped entity
+    // is `on`, that room's row says so. Unset = rows stay as they are.
+    const fans = parseJson<Record<string, string>>(config.humidityFansJson, {})
+    const stateOf = new Map(all.map((e: any) => [e.entity_id, e.state]))
+    for (const w of humidity) {
+      if (stateOf.get(fans[w.id]) === 'on') w.detail += ' (Lüfter läuft)'
+    }
 
     const warnings: Warning[] = [
       ...batteryWarnings(all, threshold, batteryExclude),

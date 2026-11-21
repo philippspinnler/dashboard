@@ -436,7 +436,9 @@ visible while any warning is active:
   `NUXT_HUMIDITY_THRESHOLD` (default 60 %), shown by the **room** (Home Assistant
   area) it sits in rather than the device name. New sensors appear automatically;
   list ids in `NUXT_HUMIDITY_EXCLUDE` to skip ones you don't want (outdoor or
-  heating-loop sensors).
+  heating-loop sensors). If a room has a fan or dehumidifier on a switch, map
+  its humidity sensor to that entity in `NUXT_HUMIDITY_FANS_JSON` and the row
+  reads "71% (Lüfter läuft)" while it is on.
 - **Maintenance** — configured consumable "time left" sensors (hours) at or below
   `NUXT_MAINTENANCE_THRESHOLD` (default 1 h), e.g. a robot vacuum's filter, brushes,
   sensors, and dock strainer. Each shows a fixed action label ("Reinigen" /
@@ -458,6 +460,7 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | `NUXT_WARNINGS_WATCHLIST_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, okStates, messages? }` to watch |
 | `NUXT_HUMIDITY_THRESHOLD` | `60` | Warn on humidity sensors above this percentage |
 | `NUXT_HUMIDITY_EXCLUDE` | _(built-in)_ | Comma-separated humidity `entity_id`s to skip (default: the outdoor sensor and a heat-pump loop sensor that shares a room with a real sensor) |
+| `NUXT_HUMIDITY_FANS_JSON` | _(none)_ | Optional JSON map of humidity `entity_id` → fan/switch `entity_id`; the row is tagged "(Lüfter läuft)" while that entity is `on` |
 | `NUXT_MAINTENANCE_THRESHOLD` | `1` | Warn on consumable `*_time_left` sensors at/below this many hours |
 | `NUXT_WARNINGS_MAINTENANCE_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, detail? }` consumables to watch |
 | `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |
