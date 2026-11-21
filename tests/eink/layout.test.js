@@ -300,6 +300,12 @@ describe('buildScreenSvg', () => {
     expect(svg).not.toContain('Sigen Plant Battery State of Cha')
   })
 
+  it('renders a warning note in regular weight after the bold value', () => {
+    const noted = { warnings: [{ kind: 'humidity', name: 'Garage', detail: '71%', note: '(Lüfter läuft)', severity: 'warning' }] }
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, warnings: noted })
+    expect(svg).toContain('Garage <tspan font-weight="bold">71%</tspan> (Lüfter läuft)</text>')
+  })
+
   it('leaves clearance between the last warning line and the box border', () => {
     // 2 warnings → last baseline at top+68; the box must extend well past the
     // icon bottom (baseline+3) so it doesn't sit on the border: 38 + 2*22 = 82.

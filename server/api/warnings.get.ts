@@ -16,7 +16,7 @@
 //                 maintenanceThreshold (e.g. the vacuum filter/brushes/strainer)
 //
 // Each provider emits a normalized warning:
-//   { id, kind, name, detail, level?, severity: 'warning'|'error' }
+//   { id, kind, name, detail, note?, level?, severity: 'warning'|'error' }
 
 import { haAllStates, haTemplate } from '../utils/homeassistant'
 
@@ -25,6 +25,7 @@ type Warning = {
   kind: 'battery' | 'problem' | 'watch' | 'humidity' | 'maintenance'
   name: string
   detail: string
+  note?: string
   level?: number
   severity: 'warning' | 'error'
 }
@@ -307,7 +308,7 @@ export default defineDashboardCachedHandler(
     const fans = parseJson<Record<string, string>>(config.humidityFansJson, {})
     const stateOf = new Map(all.map((e: any) => [e.entity_id, e.state]))
     for (const w of humidity) {
-      if (stateOf.get(fans[w.id]) === 'on') w.detail += ' (Lüfter läuft)'
+      if (stateOf.get(fans[w.id]) === 'on') w.note = '(Lüfter läuft)'
     }
 
     const warnings: Warning[] = [

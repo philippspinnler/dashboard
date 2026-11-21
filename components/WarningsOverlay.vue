@@ -9,7 +9,7 @@
             :class="{ 'is-error': w.severity === 'error' }"
           />
           <span class="warning-name">{{ w.name }}</span>
-          <span class="warning-detail" :style="{ color: detailColor(w) }">{{ w.detail }}</span>
+          <span class="warning-detail" :style="{ color: detailColor(w) }">{{ w.detail }}<span v-if="w.note" class="warning-note"> {{ w.note }}</span></span>
         </li>
       </ul>
     </div>
@@ -99,6 +99,10 @@ function detailColor(w) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.warning-note {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .warning-detail {

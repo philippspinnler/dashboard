@@ -435,9 +435,10 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
       // 35-char budget keeps a worst-case wide line inside the box border.
       parts.push(warnIcon(w.kind, 40, wy - 12, 15))
       const detail = w.detail ? String(w.detail) : ''
-      const name = truncate(w.name, detail ? 35 - [...detail].length : 35)
+      const note = w.note ? ' ' + String(w.note) : '' // regular weight, after the bold value
+      const name = truncate(w.name, 35 - [...detail].length - [...note].length)
       const detailSpan = detail ? ` <tspan font-weight="bold">${escapeXml(detail)}</tspan>` : ''
-      parts.push(`<text x="62" y="${wy}" font-size="${FS.warn}">${escapeXml(name)}${detailSpan}</text>`)
+      parts.push(`<text x="62" y="${wy}" font-size="${FS.warn}">${escapeXml(name)}${detailSpan}${escapeXml(note)}</text>`)
       wy += 22
     }
     if (warnList.length > 3) {
