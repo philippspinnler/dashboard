@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="root">
     <div v-for="day in filteredDays" :key="day.date">
       <div class="date-container">
         <div class="day">
@@ -41,7 +41,7 @@ import Heart from 'iconoir-vue/regular/Heart'
 const { data } = useWidgetData('/api/calendar', 900000)
 const days = computed(() => data.value || [])
 
-const filteredDays = computed(() => {
+const scoredDays = computed(() => {
   const MAX_SCORE = 11
   const SCORE_DAY = 0.8
   const SCORE_SPECIAL_EVENT = 0.8
@@ -83,6 +83,55 @@ const filteredDays = computed(() => {
 
   return result
 })
+
+// The score above is only a rough cap. What really fits depends on the height
+// the column gets (the warnings bar takes a line when it shows), so measure:
+// render the scored list, find the first event that would reach past the
+// clipping content area, and cut there. Whole events only, and a day left
+// without any event is dropped, so no lone day heading remains.
+const root = ref(null)
+const maxEvents = ref(Infinity)
+
+const filteredDays = computed(() => {
+  let left = maxEvents.value
+  const result = []
+  for (const day of scoredDays.value) {
+    const events = day.events.slice(0, left)
+    left -= events.length
+    if (events.length) result.push({ ...day, events })
+  }
+  return result
+})
+
+async function fit() {
+  maxEvents.value = Infinity
+  await nextTick()
+  const el = root.value
+  const clip = el?.closest('.container-content')
+  if (!clip) return // not in a height-limited zone
+  // Space taken below the calendar's own content: its widget padding/margin
+  // plus any widgets that follow it in the column.
+  const last = el.closest('.widget')?.parentElement?.lastElementChild
+  const trailing = last
+    ? last.getBoundingClientRect().bottom + parseFloat(getComputedStyle(last).marginBottom) - el.getBoundingClientRect().bottom
+    : 0
+  const limit = clip.getBoundingClientRect().bottom - trailing
+  const events = [...el.querySelectorAll('.event-container')]
+  const firstCut = events.findIndex((e) => e.getBoundingClientRect().bottom > limit + 0.5)
+  if (firstCut >= 0) maxEvents.value = firstCut
+}
+
+watch(scoredDays, fit, { flush: 'post' })
+let resizeObserver = null
+onMounted(() => {
+  const clip = root.value?.closest('.container-content')
+  if (clip) {
+    resizeObserver = new ResizeObserver(fit) // fires once on observe, then on every height change
+    resizeObserver.observe(clip)
+  }
+  document.fonts?.ready.then(fit)
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
 </script>
 
 <style scoped>

@@ -417,8 +417,10 @@ kiosk browser, so the kiosk must be able to reach HA on the LAN.
 <details>
 <summary><strong>⚠️ Warnings</strong></summary>
 
-A single card that lists active home warnings from five sources, and stays
-visible while any warning is active:
+A one-line bar right above the bottom widgets that lists active home warnings
+from five sources. It is part of the page layout, so it never covers a widget,
+and it takes no space while nothing is wrong; warnings that don't fit the line
+collapse into "+N weitere". Sources:
 
 - **Low batteries** — Home Assistant entities with `device_class: battery` at or
   below `NUXT_BATTERY_THRESHOLD` (excludes `binary_sensor.*` and
@@ -463,8 +465,7 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | `NUXT_HUMIDITY_FANS_JSON` | _(none)_ | Optional JSON map of humidity `entity_id` → fan/switch `entity_id`; the row gets a "(Lüfter läuft)" note while that entity is `on` |
 | `NUXT_MAINTENANCE_THRESHOLD` | `1` | Warn on consumable `*_time_left` sensors at/below this many hours |
 | `NUXT_WARNINGS_MAINTENANCE_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, detail? }` consumables to watch |
-| `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the overlay |
-| `NUXT_PUBLIC_WARNINGS_OVERLAY_POSITION` | `bottom-left` | Corner |
+| `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the warnings bar |
 
 Watchlist entry shape: `entity_id` (required), `label` (shown name), `okStates`
 (array of healthy states), and optional `messages` (map of state → display text,

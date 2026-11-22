@@ -53,6 +53,7 @@
           </div>
         </div>
       </div>
+      <WarningsOverlay />
       <div class="container-bottom">
         <div
           v-for="widgetId in bottomWidgets"
@@ -68,7 +69,6 @@
     <div :key="photoCycle" class="photo-progress" :style="{ animationDuration: `${PHOTO_INTERVAL_MS}ms` }" />
     <DoorbellOverlay />
     <SonosOverlay />
-    <WarningsOverlay />
   </div>
 </template>
 

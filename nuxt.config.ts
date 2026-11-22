@@ -151,11 +151,11 @@ export default defineNuxtConfig({
       sonosOverlayEnabled: 'true',
       sonosOverlayPosition: 'bottom-right', // top-left | top-right | bottom-left | bottom-right
 
-      // Warnings overlay: aggregates low batteries, HA `device_class: problem`
+      // Warnings bar: aggregates low batteries, HA `device_class: problem`
       // sensors, and configured watchlist entities (see the private warnings*
-      // config above). Shown in a corner while any warning is active.
+      // config above). A one-line bar above the bottom widgets, only while any
+      // warning is active.
       warningsOverlayEnabled: 'true',
-      warningsOverlayPosition: 'bottom-left', // top-left | top-right | bottom-left | bottom-right
     },
   },
 })
