@@ -391,7 +391,6 @@ state is shown. The TV/HDMI eARC input shows a TV icon instead of album art.
 | --- | --- | --- |
 | `NUXT_SONOS_MEDIA_PLAYERS` | _(empty)_ | Comma-separated `media_player.*` ids |
 | `NUXT_PUBLIC_SONOS_OVERLAY_ENABLED` | `true` | Enable the overlay |
-| `NUXT_PUBLIC_SONOS_OVERLAY_POSITION` | `bottom-right` | Corner |
 
 </details>
 
@@ -417,10 +416,10 @@ kiosk browser, so the kiosk must be able to reach HA on the LAN.
 <details>
 <summary><strong>⚠️ Warnings</strong></summary>
 
-A one-line bar right above the bottom widgets that lists active home warnings
-from five sources. It is part of the page layout, so it never covers a widget,
-and it takes no space while nothing is wrong; warnings that don't fit the line
-collapse into "+N weitere". Sources:
+A list at the bottom of the left column, one line per active home warning. It
+is part of the page layout, so it never covers a widget, and it takes no space
+while nothing is wrong; the more warnings, the less room the widgets above get
+(the calendar drops whole events to fit). Sources:
 
 - **Low batteries** — Home Assistant entities with `device_class: battery` at or
   below `NUXT_BATTERY_THRESHOLD` (excludes `binary_sensor.*` and
@@ -465,7 +464,7 @@ empty value never wipes them. Set a non-empty value to override, or an explicit
 | `NUXT_HUMIDITY_FANS_JSON` | _(none)_ | Optional JSON map of humidity `entity_id` → fan/switch `entity_id`; the row gets a "(Lüfter läuft)" note while that entity is `on` |
 | `NUXT_MAINTENANCE_THRESHOLD` | `1` | Warn on consumable `*_time_left` sensors at/below this many hours |
 | `NUXT_WARNINGS_MAINTENANCE_JSON` | _(built-in)_ | JSON array of `{ entity_id, label, detail? }` consumables to watch |
-| `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the warnings bar |
+| `NUXT_PUBLIC_WARNINGS_OVERLAY_ENABLED` | `true` | Enable the warnings list |
 
 Watchlist entry shape: `entity_id` (required), `label` (shown name), `okStates`
 (array of healthy states), and optional `messages` (map of state → display text,
@@ -507,8 +506,8 @@ Ideal for local development and previewing layout/overlays.
 app.vue                 # arranges widgets into regions, mounts overlays + photo background
 components/
   widgets/              # one component per grid widget
-  *Overlay.vue          # Sonos / Doorbell / Warnings corner overlays
-composables/            # client-side data polling & overlay positioning helpers
+  *Overlay.vue          # Doorbell overlay, Sonos / Warnings status cards
+composables/            # client-side data polling helpers
 server/
   api/                  # one Nitro route per data source (cached, same-origin)
     eink/               # /api/eink/screen.bin + /api/eink/screen.png (see below)

@@ -1,6 +1,6 @@
 <template>
   <Transition name="overlay-pop">
-    <div v-if="playing" class="overlay-corner sonos-overlay" :class="cornerClass">
+    <div v-if="playing" class="sonos-overlay">
       <ModernTv v-if="isTv" class="sonos-art sonos-art-icon" />
       <img v-else-if="image" class="sonos-art" :src="image" alt="Album artwork" />
       <div class="sonos-meta">
@@ -12,14 +12,14 @@
 </template>
 
 <script setup>
-// Compact now-playing pill, shown in a configurable corner only while a Sonos
-// speaker is playing (see /api/sonos, backed by Home Assistant media_player
-// entities). Disabled deployments never poll.
+// Compact now-playing pill at the bottom of the right content column, shown
+// only while a Sonos speaker is playing (see /api/sonos, backed by Home
+// Assistant media_player entities). It is part of the page flow, so it never
+// covers the bottom widgets. Disabled deployments never poll.
 import ModernTv from 'iconoir-vue/regular/ModernTv'
 
 const cfg = useRuntimeConfig().public
 const enabled = cfg.sonosOverlayEnabled === true || cfg.sonosOverlayEnabled === 'true'
-const cornerClass = useOverlayPosition(cfg.sonosOverlayPosition)
 
 const data = enabled ? useWidgetData('/api/sonos', 10000).data : ref(null)
 
@@ -32,6 +32,10 @@ const isTv = computed(() => data.value?.is_playing_tv || false)
 
 <style scoped>
 .sonos-overlay {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  margin: 0.4rem 1.9rem 0 0.4rem; /* right edge lines up with the widgets' inner edge */
+  text-align: left;
   display: flex;
   align-items: center;
   gap: 0.9rem;

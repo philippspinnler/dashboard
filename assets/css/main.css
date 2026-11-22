@@ -92,6 +92,23 @@ body {
   overflow: hidden;
 }
 
+/* Each content column stacks its widgets (.zone-widgets, clipped) above a
+   status slot pinned to the column's bottom: warnings on the left, Sonos on the
+   right. The slot is in the flow, so it never covers the bottom widgets and
+   takes no space while empty; when it shows, the widgets above get less room. */
+.container-content-left,
+.container-content-right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.zone-widgets {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .container-content-left {
   flex-grow: 0;
   flex-shrink: 0;
@@ -218,32 +235,7 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* --- Conditional corner overlays --------------------------------------------
-   Fixed cards pinned to a configurable viewport corner, shown only while active
-   (Sonos now-playing now; future low-battery, etc.). The doorbell overlay keeps
-   the top of the stack at z-index 1000; these sit just below at 900. Use with
-   the useOverlayPosition() composable and `<Transition name="overlay-pop">`. */
-.overlay-corner {
-  position: fixed;
-  z-index: 900;
-}
-.overlay-corner.is-top-left {
-  top: 1.2vh;
-  left: 1.2vh;
-}
-.overlay-corner.is-top-right {
-  top: 1.2vh;
-  right: 1.2vh;
-}
-.overlay-corner.is-bottom-left {
-  bottom: 1.2vh;
-  left: 1.2vh;
-}
-.overlay-corner.is-bottom-right {
-  bottom: 1.2vh;
-  right: 1.2vh;
-}
-
+/* Enter/leave for the conditional status cards (warnings, Sonos). */
 .overlay-pop-enter-active,
 .overlay-pop-leave-active {
   transition: opacity 0.35s ease, transform 0.35s ease;

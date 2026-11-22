@@ -146,14 +146,13 @@ export default defineNuxtConfig({
       doorbellOverlaySeconds: '60', // how long the overlay stays up before auto-dismiss
       doorbellAlwaysShow: 'false', // dev/tuning: pin the overlay open (no ring needed)
 
-      // Sonos overlay: a compact now-playing card shown in a corner only while a
-      // speaker is playing (no fixed grid space). Doorbell always renders on top.
+      // Sonos card: a compact now-playing card at the bottom of the right column,
+      // only while a speaker is playing. Doorbell always renders on top.
       sonosOverlayEnabled: 'true',
-      sonosOverlayPosition: 'bottom-right', // top-left | top-right | bottom-left | bottom-right
 
       // Warnings bar: aggregates low batteries, HA `device_class: problem`
       // sensors, and configured watchlist entities (see the private warnings*
-      // config above). A one-line bar above the bottom widgets, only while any
+      // config above). A list at the bottom of the left column, only while any
       // warning is active.
       warningsOverlayEnabled: 'true',
     },

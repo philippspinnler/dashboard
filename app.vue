@@ -33,27 +33,32 @@
       </div>
       <div class="container-content">
         <div class="container-content-left">
-          <div
-            v-for="widgetId in leftWidgets"
-            :key="widgetId"
-            class="widget"
-            :class="[`widget-${widgetId}`, { 'widget-glassmorphism': enableGlassmorphism }]"
-          >
-            <component :is="widgetComponents[widgetId]" v-if="widgetComponents[widgetId]" />
+          <div class="zone-widgets">
+            <div
+              v-for="widgetId in leftWidgets"
+              :key="widgetId"
+              class="widget"
+              :class="[`widget-${widgetId}`, { 'widget-glassmorphism': enableGlassmorphism }]"
+            >
+              <component :is="widgetComponents[widgetId]" v-if="widgetComponents[widgetId]" />
+            </div>
           </div>
+          <WarningsOverlay />
         </div>
         <div class="container-content-right">
-          <div
-            v-for="widgetId in rightWidgets"
-            :key="widgetId"
-            class="widget"
-            :class="[`widget-${widgetId}`, { 'widget-glassmorphism': enableGlassmorphism }]"
-          >
-            <component :is="widgetComponents[widgetId]" v-if="widgetComponents[widgetId]" />
+          <div class="zone-widgets">
+            <div
+              v-for="widgetId in rightWidgets"
+              :key="widgetId"
+              class="widget"
+              :class="[`widget-${widgetId}`, { 'widget-glassmorphism': enableGlassmorphism }]"
+            >
+              <component :is="widgetComponents[widgetId]" v-if="widgetComponents[widgetId]" />
+            </div>
           </div>
+          <SonosOverlay />
         </div>
       </div>
-      <WarningsOverlay />
       <div class="container-bottom">
         <div
           v-for="widgetId in bottomWidgets"
@@ -68,7 +73,6 @@
     <!-- Hairline at the bottom edge that fills up until the next photo change -->
     <div :key="photoCycle" class="photo-progress" :style="{ animationDuration: `${PHOTO_INTERVAL_MS}ms` }" />
     <DoorbellOverlay />
-    <SonosOverlay />
   </div>
 </template>
 

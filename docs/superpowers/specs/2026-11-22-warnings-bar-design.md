@@ -31,3 +31,16 @@ reserving space while there are none.
 - Sonos overlay unchanged (it only covers the later forecast days; accepted).
 - The calendar has a fixed row budget and does not adapt to height; the bar takes
   ~3 rem from the content area, which is normally free space.
+
+## Revision, same day
+
+After seeing the bar live: stack the warnings one per line instead (no "+N
+weitere"; more warnings simply take more of the calendar), and move the Sonos
+card up as well so it stops covering the forecast.
+
+- Each content column is now `.zone-widgets` (its widgets, clipped) plus a status
+  slot pinned to the column bottom: warnings on the left, Sonos on the right.
+  Both are in the flow; an empty slot has no height.
+- Warnings only take room from the left column, Sonos only from the right.
+- The calendar measures against `.zone-widgets` and drops whole events.
+- `NUXT_PUBLIC_SONOS_OVERLAY_POSITION` and the shared corner styles are removed.

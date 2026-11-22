@@ -85,7 +85,7 @@ const scoredDays = computed(() => {
 })
 
 // The score above is only a rough cap. What really fits depends on the height
-// the column gets (the warnings bar takes a line when it shows), so measure:
+// the column gets (the warnings below take a line each), so measure:
 // render the scored list, find the first event that would reach past the
 // clipping content area, and cut there. Whole events only, and a day left
 // without any event is dropped, so no lone day heading remains.
@@ -107,7 +107,7 @@ async function fit() {
   maxEvents.value = Infinity
   await nextTick()
   const el = root.value
-  const clip = el?.closest('.container-content')
+  const clip = el?.closest('.zone-widgets')
   if (!clip) return // not in a height-limited zone
   // Space taken below the calendar's own content: its widget padding/margin
   // plus any widgets that follow it in the column.
@@ -124,7 +124,7 @@ async function fit() {
 watch(scoredDays, fit, { flush: 'post' })
 let resizeObserver = null
 onMounted(() => {
-  const clip = root.value?.closest('.container-content')
+  const clip = root.value?.closest('.zone-widgets')
   if (clip) {
     resizeObserver = new ResizeObserver(fit) // fires once on observe, then on every height change
     resizeObserver.observe(clip)
