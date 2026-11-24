@@ -279,12 +279,18 @@ NUXT_TRANSPORT_CONNECTIONS_JSON=[["Station A","Station B","direct"]]
 
 | Variable | Description |
 | --- | --- |
-| `NUXT_SPEEDTESTS_JSON` | JSON array of `{ "host", "port", "provider" }` |
+| `NUXT_SPEEDTESTS_JSON` | JSON array of `{ "host", "port", "provider", "max_age_hours"? }` |
 | `NUXT_SPEEDTEST_SOURCE` | `speedtest-tracker` (default) or `iperf` — how each host's `/api/speedtest/latest` is parsed |
 
 With `iperf`, point the hosts at a self-hosted iperf3 collector (runs `iperf3` against a
 public server and serves the latest download/upload over HTTP) instead of a
 [speedtest-tracker](https://github.com/linuxserver/docker-speedtest-tracker) instance.
+
+List several entries to compare lines, e.g. a main and a backup connection: the widget and
+the e-ink companion then show one compact row per provider. A source that can't be reached
+shows a dash while the others keep working. Set the optional `max_age_hours` on an entry to
+also show a dash once its latest reading is older than that, so a broken line doesn't keep
+displaying its last good result.
 
 </details>
 

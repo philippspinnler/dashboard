@@ -239,6 +239,31 @@ describe('buildScreenSvg', () => {
     const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, speedtest })
     expect(svg).toContain('9.45 Gbps')
     expect(svg).toContain('9.38 Gbps')
+    expect(svg).not.toContain('Init7') // a single provider needs no name
+  })
+
+  const twoSpeedtests = [
+    speedtest[0],
+    { provider: 'Starlink', download: { num: '95.2', unit: 'Mbps' }, upload: { num: '18.1', unit: 'Mbps' } },
+  ]
+
+  it('renders one row per provider when there are several', () => {
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, speedtest: twoSpeedtests })
+    expect(svg).toMatch(/Init7<tspan[^>]*>↓ 9\.45 Gbps {3}↑ 9\.38 Gbps/)
+    expect(svg).toMatch(/Starlink<tspan[^>]*>↓ 95\.2 Mbps {3}↑ 18\.1 Mbps/)
+  })
+
+  it('shows a dash for a provider without values', () => {
+    const down = [twoSpeedtests[0], { provider: 'Starlink', download: null, upload: null }]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, speedtest: down })
+    expect(svg).toMatch(/Starlink<tspan[^>]*>—</)
+    expect(svg).toContain('9.45 Gbps')
+  })
+
+  it('hides Internet when no provider has values', () => {
+    const none = [{ provider: 'A', download: null, upload: null }]
+    const svg = buildScreenSvg({ time: '12:34', date: 'Mittwoch', days, inverter, speedtest: none })
+    expect(svg).not.toContain('Internet')
   })
 
   it('shows the warnings overlay only when warnings exist', () => {

@@ -28,6 +28,7 @@ const RX = 416
 const HEADER_GAP = 28 // section/day header baseline → its first line
 const ROW = 27 // line → line within a block
 const BLOCK_GAP = 14 // extra gap after a block
+const SPEED_NAME_W = 92 // provider-name column when several speedtests are listed
 
 // Font sizes in one place — the readable/compact tradeoff lives here.
 const FS = {
@@ -359,13 +360,13 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   // A running ry means hidden sections simply reflow the rest upward. The zero /
   // null checks distinguish "no source" from a genuine 0 or "off" reading.
   const rx = RX
-  const speed = (speedtest && speedtest[0]) || null
+  const speeds = Array.isArray(speedtest) ? speedtest : []
   const hasInverter =
     inverter &&
     [inverter.pv_power, inverter.power_consumption, inverter.grid_consumption, inverter.grid_feedin, inverter.battery_state_of_charge].some(
       (v) => Number(v),
     )
-  const hasSpeed = Boolean(speed && speed.download)
+  const hasSpeed = speeds.some((s) => s && s.download)
   const hasHeizung = Boolean(heizung)
   const hasNetatmo = netatmo && (netatmo.indoor_temperature != null || netatmo.outdoor_temperature != null)
   const anyRight = hasInverter || hasSpeed || hasHeizung || hasNetatmo
@@ -392,12 +393,26 @@ export function buildScreenSvg({ time, date, days, inverter, presence, speedtest
   }
 
   if (hasSpeed) {
-    const down = speed.download ? `${speed.download.num} ${speed.download.unit}` : '—'
-    const up = speed.upload ? `${speed.upload.num} ${speed.upload.unit}` : '—'
+    const values = (s) =>
+      s.download && s.upload ? `↓ ${s.download.num} ${s.download.unit}   ↑ ${s.upload.num} ${s.upload.unit}` : '—'
     parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.section}" font-weight="bold">Internet</text>`)
     ry += HEADER_GAP
-    parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">↓ ${escapeXml(down)}   ↑ ${escapeXml(up)}</text>`)
-    ry += ROW + BLOCK_GAP
+    if (speeds.length === 1) {
+      parts.push(`<text x="${rx}" y="${ry}" font-size="${FS.metric}">${escapeXml(values(speeds[0]))}</text>`)
+      ry += ROW
+    } else {
+      // Several lines (e.g. main + backup): one row each, provider name in a
+      // fixed-width column so the values line up. A provider without a fresh
+      // reading shows a dash instead of stale numbers.
+      for (const s of speeds) {
+        const name = truncateToWidth(String(s.provider ?? ''), SPEED_NAME_W - 8, FS.metric)
+        parts.push(
+          `<text x="${rx}" y="${ry}" font-size="${FS.metric}">${escapeXml(name)}<tspan x="${rx + SPEED_NAME_W}">${escapeXml(values(s))}</tspan></text>`,
+        )
+        ry += ROW
+      }
+    }
+    ry += BLOCK_GAP
   }
 
   if (hasHeizung) {
