@@ -2,7 +2,8 @@
 // from a single /api/states dump (batteries, water/vacuum/etc. change slowly, so
 // a 5-minute cache is plenty):
 //
-//   battery     — device_class:battery entities at/below batteryThreshold
+//   battery     — device_class:battery entities at/below batteryThreshold, named
+//                 "<room> <device>" (HA area + device name)
 //   problem     — device_class:problem binary_sensors currently `on`
 //                 (Home Assistant's standard "something's wrong" signal; the
 //                 Grünbeck salt warning surfaces here automatically)
@@ -75,14 +76,39 @@ function deviceName(friendly: string): string {
   return friendly.replace(/\s+(has\s+error|problem)$/i, '').trim() || friendly
 }
 
-function batteryWarnings(all: any[], threshold: number, exclude: Set<string>): Warning[] {
+// Like HUMIDITY_TEMPLATE below: room + device name per battery sensor. Device
+// names don't carry the room (two locks are both just "Türschloss"), so the
+// friendly_name alone doesn't say which one is low.
+const BATTERY_NAMES_TEMPLATE =
+  "{% set ns = namespace(items=[]) %}{% for s in states.sensor %}{% if s.attributes.device_class == 'battery' %}{% set ns.items = ns.items + [{'entity_id': s.entity_id, 'area': area_name(s.entity_id), 'device': device_attr(s.entity_id, 'name_by_user') or device_attr(s.entity_id, 'name')}] %}{% endif %}{% endfor %}{{ ns.items | tojson }}"
+
+// entity_id -> "<room> <device>" (e.g. "Eingang Türschloss"). Entities without
+// a device are left out and keep their friendly_name.
+async function batteryNames(event: any): Promise<Map<string, string>> {
+  const rows = parseJson<any[]>(await haTemplate(event, BATTERY_NAMES_TEMPLATE), [])
+  const names = new Map<string, string>()
+  if (!Array.isArray(rows)) return names
+  for (const r of rows) {
+    if (r?.entity_id && r.device) {
+      names.set(r.entity_id, [r.area, r.device].filter(Boolean).join(' '))
+    }
+  }
+  return names
+}
+
+function batteryWarnings(
+  all: any[],
+  threshold: number,
+  exclude: Set<string>,
+  names: Map<string, string>,
+): Warning[] {
   return all
     .filter((e: any) => e?.attributes?.device_class === 'battery')
     .filter((e: any) => !String(e.entity_id || '').startsWith('binary_sensor.'))
     .filter((e: any) => !exclude.has(e.entity_id))
     .map((e: any) => ({
       entity_id: e.entity_id as string,
-      name: (e.attributes?.friendly_name || e.entity_id) as string,
+      name: (names.get(e.entity_id) || e.attributes?.friendly_name || e.entity_id) as string,
       level: Number(e.state),
     }))
     .filter((e) => !Number.isNaN(e.level) && e.level <= threshold)
@@ -298,9 +324,10 @@ export default defineDashboardCachedHandler(
 
     // Humidity needs a separate template render (for room names); fetch it
     // alongside the shared states dump the other providers filter.
-    const [all, humidity] = await Promise.all([
+    const [all, humidity, names] = await Promise.all([
       haAllStates(event),
       humidityWarnings(event, humidityThreshold, humidityExclude),
+      batteryNames(event),
     ])
 
     // Optional: { humidity sensor id: fan/switch id }. While the mapped entity
@@ -312,7 +339,7 @@ export default defineDashboardCachedHandler(
     }
 
     const warnings: Warning[] = [
-      ...batteryWarnings(all, threshold, batteryExclude),
+      ...batteryWarnings(all, threshold, batteryExclude, names),
       ...problemWarnings(all, exclude, labels),
       ...watchWarnings(all, watchlist),
       ...humidity,

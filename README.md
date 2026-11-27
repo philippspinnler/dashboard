@@ -429,7 +429,8 @@ while nothing is wrong; the more warnings, the less room the widgets above get
 
 - **Low batteries** — Home Assistant entities with `device_class: battery` at or
   below `NUXT_BATTERY_THRESHOLD` (excludes `binary_sensor.*` and
-  unknown/unavailable states), sorted lowest-first. Color-coded 🔴 red below
+  unknown/unavailable states), sorted lowest-first and named by room and
+  device (e.g. "Hallway Door lock"). Color-coded 🔴 red below
   10 %, 🟡 yellow below 25 %.
 - **Problem sensors** — every `binary_sensor` with `device_class: problem` that is
   `on`. This is Home Assistant's standard "something's wrong" signal, so many
